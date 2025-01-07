@@ -1,10 +1,41 @@
 lib_args = common_args + []
 
+# Define custom file extension (e.g., `.tab`) as header files
+tab_files = files(
+  'inv_sqrt.tab',
+  'log2.tab',
+  'pow2.tab',
+  'window.tab',
+  'lag_wind.tab',
+  'grid.tab',
+  'ener_qua.tab',
+  'clsp_334.tab',
+)
+
 # sources used to compile this plug-in
 plugin_sources = [
   'gstacelpencplugin.c',
   'gstacelpenc.c',
-  'gstacelpenc.h'
+  'gstacelpenc.h',
+  'source.h',
+  'fbas_tet.c',
+  'fexp_tet.c',
+  'fmat_tet.c',
+  'scod_tet.c',
+  'sub_dsp.c',
+  'sub_sc_d.c',
+  'tetra_op.c',
+#  'sdec_tet.c',
+#  'structs.c',
+#  'scoder.c',
+#  'sdecoder.c',
+#  'ccoder.c',
+#  'ccod_tet.c',
+#  'sub_cc.c',
+#  'cdecoder.c',
+#  'sub_cd.c',
+#  'cdec_tet.c'
+
 ]
 
 shlib = shared_library('gstacelpenc',

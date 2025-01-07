@@ -56,5 +56,5 @@ plugin_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, acelpenc, "FIXME Template plugin", plugin_init, VERSION, "LGPL",       /* FIXME */
-    "GStreamer", "http://gstreamer.net/")
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, acelpenc, "TETRA ACELP Encoder plugin", plugin_init, VERSION, "LGPL",       /* FIXME */
+    "GStreamer", "https://github.com/eckschi/gst-acelp")

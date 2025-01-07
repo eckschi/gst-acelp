@@ -27,7 +27,7 @@ gst_req = '>= 1.0.0'
 # for libgstrtp-1.0: gstreamer-rtp-1.0
 # for libgstrtsp-1.0: gstreamer-rtsp-1.0
 # etc.
-gst_dep = dependency('gstreamer-1.0', version : gst_req,
+gst_dep = dependency('gstreamer-audio-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_dep'])
 gst_base_dep = dependency('gstreamer-base-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_base_dep'])
