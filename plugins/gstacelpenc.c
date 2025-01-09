@@ -38,8 +38,8 @@
 #include <gst/audio/gstaudioencoder.h>
 #include "gstacelpenc.h"
 
-#include "source.h"
-#include "structs.h"
+#include "c_source.h"
+#include "c_structs.h"
 
 #define L_frame     240
 #define serial_size 138
@@ -285,13 +285,13 @@ acelpenc_encode_block (GstAcelpenc * enc, const gint16 * samples, int blocksize)
 
   memcpy(enc->coderData.new_speech, samples, L_frame);        // copy input audio into codec
 
-  Pre_Process(&enc->coderData, enc->coderData.new_speech, (Word16)L_frame);	    // Pre processing of input speech 
+  Pre_Process(enc->coderData.new_speech, (Word16)L_frame, &enc->coderData);	    // Pre processing of input speech 
 
-  Coder_Tetra(&enc->coderData, ana, syn);       // Find speech parameters         
+  Coder_Tetra(ana, syn, &enc->coderData);       // Find speech parameters         
 
-  Post_Process(syn, (Word16)L_frame);           // Post processing of synthesis   
+  Post_Process(syn, (Word16)L_frame, &enc->coderData);           // Post processing of synthesis   
 
-  Prm2bits_Tetra(ana, omap.data);                  // Parameters to serial bits      
+  Prm2bits_Tetra_8(ana, omap.data, &enc->coderData);                  // Parameters to serial bits      
 
   gst_buffer_unmap (outbuf, &omap);
 

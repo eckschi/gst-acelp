@@ -15,7 +15,7 @@
 *
 ************************************************************************/
 
-#include "source.h"
+#include "c_source.h"
 
 /*--------------------------------------------------------*
  *       Decoder constants parameters.                    *
@@ -30,14 +30,14 @@
  *   parm_size   : Lenght of vector parm[]                *
  *--------------------------------------------------------*/
 
-#define  L_frame  (Word16)240
-#define  L_subfr  (Word16)60
-#define  p        (Word16)10
-#define  pp1      (Word16)11
-#define  pit_min  (Word16)20
-#define  pit_max  (Word16)143
-#define  L_inter  (Word16)15
-#define  parm_size (Word16)23
+#define  L_frame  (Word16)STRUCTS_L_frame
+#define  L_subfr  (Word16)STRUCTS_L_subfr
+#define  p        (Word16)STRUCTS_p
+#define  pp1      (Word16)STRUCTS_pp1
+#define  pit_min  (Word16)STRUCTS_pit_min
+#define  pit_max  (Word16)STRUCTS_pit_max
+#define  L_inter  (Word16)STRUCTS_L_inter
+#define  parm_size (Word16)STRUCTS_parm_size
 
 
 /*--------------------------------------------------------*
@@ -45,51 +45,8 @@
  *      In Q15 = 0.75, 0.85                               *
  *--------------------------------------------------------*/
 
-#define gamma3  (Word16)24576
-#define gamma4  (Word16)27853
-
-
-/*--------------------------------------------------------*
- *         Static memory allocation.                      *
- *--------------------------------------------------------*/
-
-        /* Excitation vector */
-
-static Word16 old_exc[L_frame+pit_max+L_inter];
-static Word16 *exc;
-
-        /* Spectral expansion factors */
-
-static Word16 F_gamma3[p];
-static Word16 F_gamma4[p];
-
-        /* Lsp (Line spectral pairs in the cosine domain) */
-
-static Word16 lspold[p]={
-              30000, 26000, 21000, 15000, 8000, 0,
-		  -8000,-15000,-21000,
-			-26000};
-static Word16 lspnew[p];
-
-	  /* Initial lsp values used after each time */
-        /* a reset is executed */
-
-static Word16 lspold_init[p]={
-              30000, 26000, 21000, 15000, 8000, 0,
-		  -8000,-15000,-21000,-26000};
-
-        /* Filter's memory */
-
-static Word16 mem_syn[p];
-
-        /* Default parameters */
-
-static Word16 old_parm[parm_size], old_T0;
-
-       /* Global definition */
-
-Word16 last_ener_cod;
-Word16 last_ener_pit;
+#define gamma3  (Word16)STRUCTS_gamma3
+#define gamma4  (Word16)STRUCTS_gamma4
 
 
 /**************************************************************************
@@ -110,43 +67,43 @@ Word16 last_ener_pit;
 *
 **************************************************************************/
 
-void Init_Decod_Tetra(void)
+void Init_Decod_Tetra(tetra_op_t* top)
 {
   Word16 i;
 
-  old_T0 = 60;
+  top->old_T0 = 60;
   for(i=0; i<23; i++)
-     old_parm[i] = 0;
+     top->old_parm[i] = 0;
 
   /* Initialize static pointer */
 
-  exc    = old_exc + pit_max + L_inter;
+  top->exc = top->old_exc + pit_max + L_inter;
 
   /* Initialize global variables */
 
-  last_ener_cod = 0;
-  last_ener_pit = 0;
+  top->last_ener_cod = 0;
+  top->last_ener_pit = 0;
   
   /* Static vectors to zero */
 
   for(i=0; i<pit_max + L_inter; i++)
-    old_exc[i] = 0;
+    top->old_exc[i] = 0;
 
   for(i=0; i<p; i++)
-    mem_syn[i] = 0;
+    top->mem_syn[i] = 0;
 
 
   /* Initialisation of lsp values for first */
   /* frame lsp interpolation */
 
   for(i=0; i<p; i++)
-    lspold[i] = lspold_init[i];
+    top->lspold[i] = lspold_init[i];
 
 
   /* Compute LPC spectral expansion factors */
 
-  Fac_Pond(gamma3, F_gamma3);
-  Fac_Pond(gamma4, F_gamma4);
+  Fac_Pond(gamma3, top->F_gamma3, top);
+  Fac_Pond(gamma4, top->F_gamma4, top);
 
  return;
 }
@@ -177,7 +134,7 @@ void Init_Decod_Tetra(void)
 *
 **************************************************************************/
 
-void Decod_Tetra(Word16 parm[], Word16 synth[])
+void Decod_Tetra(Word16 parm[], Word16 synth[], tetra_op_t* top)
 {
   /* LPC coefficients */
 
@@ -212,30 +169,30 @@ void Decod_Tetra(Word16 parm[], Word16 synth[])
 
   if(bfi == 0)
   {
-    D_Lsp334(&parm[0], lspnew, lspold);	/* lsp decoding   */
+    D_Lsp334(&parm[0], top->lspnew, top->lspold, top);	/* lsp decoding   */
 
     for(i=0; i< parm_size; i++)		/* keep parm[] as old_parm */
-      old_parm[i] = parm[i];
+      top->old_parm[i] = parm[i];
   }
   else
   {
     for(i=1; i<p; i++)
-      lspnew[i] = lspold[i];
+      top->lspnew[i] = top->lspold[i];
 
     for(i=0; i< parm_size; i++)		/* use old parm[] */
-      parm[i] = old_parm[i];
+      parm[i] = top->old_parm[i];
   }
 
   parm += 3;			/* Advance synthesis parameters pointer */
 
   /* Interpolation of LPC for the 4 subframes */
 
-  Int_Lpc4(lspold,   lspnew,   A_t);
+  Int_Lpc4(top->lspold,   top->lspnew,   A_t, top);
 
   /* update the LSPs for the next frame */
 
   for(i=0; i<p; i++)
-    lspold[i]   = lspnew[i];
+    top->lspold[i]   = top->lspnew[i];
 
 /*------------------------------------------------------------------------*
  *          Loop for every subframe in the analysis frame                 *
@@ -263,36 +220,36 @@ void Decod_Tetra(Word16 parm[], Word16 synth[])
          {
            /* T0 = (index+2)/3 + 19; T0_frac = index - T0*3 + 58; */
 
-           i = add(index, (Word16)2);
-           i = mult(i, (Word16)10923);	/* 10923 = 1/3 in Q15 */
-           T0 = add(i, (Word16)19);
+           i = add(index, (Word16)2, top);
+           i = mult(i, (Word16)10923, top);	/* 10923 = 1/3 in Q15 */
+           T0 = add(i, (Word16)19, top);
 
-           i = add(T0, add(T0, T0) );	/* T0*3 */
-           i = sub((Word16)58, (Word16)i);
-           T0_frac = add(index, (Word16)i);
+           i = add(T0, add(T0, T0, top), top);	/* T0*3 */
+           i = sub((Word16)58, (Word16)i, top);
+           T0_frac = add(index, (Word16)i, top);
          }
          else
          {
-           T0 = sub(index, (Word16)112);
+           T0 = sub(index, (Word16)112, top);
            T0_frac = 0;
          }
       }
       else   /* bfi == 1 */
       {
-        T0 = old_T0;
+        T0 = top->old_T0;
         T0_frac = 0;
       }
 
 
       /* find T0_min and T0_max for other subframes */
 
-      T0_min = sub(T0, (Word16)5);
+      T0_min = sub(T0, (Word16)5, top);
       if (T0_min < pit_min) T0_min = pit_min;
-      T0_max = add(T0_min, (Word16)9);
+      T0_max = add(T0_min, (Word16)9, top);
       if (T0_max > pit_max)
       {
         T0_max = pit_max;
-        T0_min = sub(T0_max, (Word16)9);
+        T0_min = sub(T0_max, (Word16)9, top);
       }
     }
 
@@ -303,15 +260,15 @@ void Decod_Tetra(Word16 parm[], Word16 synth[])
       {
          /* T0 = (index+2)/3 - 1 + T0_min; */
 
-         i = add(index, (Word16)2);
-         i = mult(i, (Word16)10923);	/* 10923 = 1/3 in Q15 */
-         i = sub(i, (Word16)1);
-         T0 = add(T0_min, i);
+         i = add(index, (Word16)2, top);
+         i = mult(i, (Word16)10923, top);	/* 10923 = 1/3 in Q15 */
+         i = sub(i, (Word16)1, top);
+         T0 = add(T0_min, i, top);
 
          /* T0_frac = index - 2 - i*3; */
 
-         i = add(i, add(i,i) );		/* i*3 */
-         T0_frac = sub( index , add(i, (Word16)2) );
+         i = add(i, add(i,i, top), top);		/* i*3 */
+         T0_frac = sub( index , add(i, (Word16)2, top) , top);
       }
     }
 
@@ -319,7 +276,7 @@ void Decod_Tetra(Word16 parm[], Word16 synth[])
     * - Find the adaptive codebook vector.            *
     *-------------------------------------------------*/
 
-    Pred_Lt(&exc[i_subfr], T0, T0_frac, L_subfr);
+    Pred_Lt(&top->exc[i_subfr], T0, T0_frac, L_subfr, top);
 
    /*-----------------------------------------------------*
     * - Compute noise filter F[].                         *
@@ -327,27 +284,27 @@ void Decod_Tetra(Word16 parm[], Word16 synth[])
     * - Find the algebraic codeword.                      *
     *-----------------------------------------------------*/
 
-    Pond_Ai(A, F_gamma3, Ap3);
-    Pond_Ai(A, F_gamma4, Ap4);
+    Pond_Ai(A, top->F_gamma3, Ap3, top);
+    Pond_Ai(A, top->F_gamma4, Ap4, top);
 
     for (i = 0;   i <= p;      i++) F[i] = Ap3[i];
     for (i = pp1; i < L_subfr; i++) F[i] = 0;
 
-    Syn_Filt(Ap4, F, F, L_subfr, &F[pp1], (Word16)0);
+    Syn_Filt(Ap4, F, F, L_subfr, &F[pp1], (Word16)0, top);
 
     /* Introduce pitch contribution with fixed gain of 0.8 to F[] */
 
     for (i = T0; i < L_subfr; i++)
     {
-      temp = mult(F[i-T0], (Word16)26216);
-      F[i] = add(F[i], temp);
+      temp = mult(F[i-T0], (Word16)26216, top);
+      F[i] = add(F[i], temp, top);
     }
 
     index = *parm++;
     sign_code  = *parm++;
     shift_code = *parm++;
 
-    D_D4i60(index, sign_code, shift_code, F, code);
+    D_D4i60(index, sign_code, shift_code, F, code, top);
 
 
    /*-------------------------------------------------*
@@ -356,7 +313,7 @@ void Decod_Tetra(Word16 parm[], Word16 synth[])
 
     index = *parm++;        /* index of energy VQ */
 
-    Dec_Ener(index,bfi,A,&exc[i_subfr],code, L_subfr, &gain_pit, &gain_code);
+    Dec_Ener(index,bfi,A,&top->exc[i_subfr],code, L_subfr, &gain_pit, &gain_code, top);
 
    /*-------------------------------------------------------*
     * - Find the total excitation.                          *
@@ -369,12 +326,12 @@ void Decod_Tetra(Word16 parm[], Word16 synth[])
       /* exc[i]  in Q0   gain_pit in Q12               */
       /* code[i] in Q12  gain_cod in Q0                */
 
-      L_temp = L_mult0(exc[i+i_subfr], gain_pit);
-      L_temp = L_mac0(L_temp, code[i], gain_code);
-      exc[i+i_subfr] = L_shr_r(L_temp, (Word16)12);
+      L_temp = L_mult0(top->exc[i+i_subfr], gain_pit);
+      L_temp = L_mac0(L_temp, code[i], gain_code, top);
+      top->exc[i+i_subfr] = (Word16)L_shr_r(L_temp, (Word16)12, top);
     }
 
-    Syn_Filt(A, &exc[i_subfr], &synth[i_subfr], L_subfr, mem_syn, (Word16)1);
+    Syn_Filt(A, &top->exc[i_subfr], &synth[i_subfr], L_subfr, top->mem_syn, (Word16)1, top);
 
     A  += pp1;    /* interpolated LPC parameters for next subframe */
   }
@@ -385,9 +342,9 @@ void Decod_Tetra(Word16 parm[], Word16 synth[])
   *--------------------------------------------------*/
 
   for(i=0; i<pit_max+L_inter; i++)
-    old_exc[i] = old_exc[i+L_frame];
+    top->old_exc[i] = top->old_exc[i+L_frame];
 
-  old_T0 = T0;
+  top->old_T0 = T0;
 
   return;
 }

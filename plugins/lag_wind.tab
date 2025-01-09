@@ -24,9 +24,8 @@
 *					   the file fexp_tet.c - Section A.5.2)
 *
 ************************************************************************/
-#include <stdint.h>
 
-static const int16_t lag_h[10] = 
+static const Word16 lag_h[10] = 
 {
 	32729,
 	32621,
@@ -40,7 +39,7 @@ static const int16_t lag_h[10] =
 	29322
 };
 
-static const int16_t lag_l[10] = 
+static const Word16 lag_l[10] = 
 {
 	32704,
 	5120,

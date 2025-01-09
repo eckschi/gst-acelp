@@ -7,20 +7,20 @@
 ************************************************************************
 *
 *	FUNCTIONS		:	- inv_sqrt()
-*					- Log2()
-*					- pow2()
+*						- Log2()
+*						- pow2()
 *
 ************************************************************************
 *
 *	INCLUDED FILES	:	source.h
 *
-*					inv_sqrt.tab
-*					log2.tab
-*					pow2.tab
+*						inv_sqrt.tab
+*						log2.tab
+*						pow2.tab
 *
 ************************************************************************/
 
-#include "source.h"
+#include "c_source.h"
 
 #include "inv_sqrt.tab"         /* Table for inv_sqrt() */
 #include "log2.tab"             /* Table for Log2() */
@@ -41,7 +41,7 @@
 *	Inputs :
 *
 *		L_x
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x0000 0000 <= L_x <= 0x7fff ffff.
 *
 *	Outputs :
@@ -51,60 +51,61 @@
 *	Returned Value :
 *
 *		L_y
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x0000 0000 <= L_y <= 0x3fff ffff.
-*			L_y is a Q30 value (point between b30 and b29)
+*			L_y is a Q30 value(point between b30 and b29)
 *
 *	Algorithm :
 *
-*		The function 1/sqrt(L_x) is approximated by a table (tab_inv_sqrt)
+*		The function 1/sqrt(L_x) is approximated by a table(tab_inv_sqrt)
 *		and linear interpolation :
 *
 *			1 - Normalization of L_x
-*			2 - If (30-exponant) is even then shift right once
-*			3 - exponant = (30-exponant)/2  +1
-*			4 - i = bit25-b31 of L_x,    16 <= i <= 63  ->because of normalization
-*			5 - a = bit10-b24
+*			2 - If(30 - exponant) is even then shift right once
+*			3 - exponant = (30 - exponant)/2  +1
+*			4 - i = bit25 - b31 of L_x,    16 <= i <= 63->because of normalization
+*			5 - a = bit10 - b24
 *			6 - i -=16
-*			7 - L_y = tab_inv_sqrt[i]<<16 - (tab_inv_sqrt[i] - tab_inv_sqrt[i+1]) * a * 2
+*			7 - L_y = tab_inv_sqrt[i] << 16 - (tab_inv_sqrt[i] - tab_inv_sqrt[i + 1]) * a * 2
 *			8 - L_y >>= exponant
 *
 ************************************************************************/
 
-Word32 inv_sqrt(Word32 L_x)
+Word32 inv_sqrt(Word32 L_x, tetra_op_t* top)
 {
-  Word16 exp, i, a, tmp;
-  Word32 L_y;
-
-  if( L_x <= (Word32)0) return ( (Word32)0x3fffffff);
-
-
-  exp = norm_l(L_x);
-  L_x = L_shl(L_x, exp );		/* L_x is normalized */
-
-  exp = sub( (Word16)30, exp );
-  if( (exp & 1) == 0 )			/* If exponant even -> shift right */
-      L_x = L_shr( L_x, (Word16)1 );
-
-  exp = shr( exp, (Word16)1 );
-  exp = add( exp, (Word16)1 );
-
-  L_x = L_shr( L_x, (Word16)9 );
-  i   = extract_h(L_x);			/* Extract b25-b31 */
-  L_x = L_shr( L_x, (Word16)1 );
-  a   = extract_l(L_x);			/* Extract b10-b24 */
-  a   = a & (Word16)0x7fff;
-
-  i   = sub( i, (Word16)16 );
-
-  L_y = L_deposit_h(tab_inv_sqrt[i]);	/* tab_inv_sqrt[i] << 16 */
-  tmp = sub(tab_inv_sqrt[i], tab_inv_sqrt[i+1]);
-					    /* tab_inv_sqrt[i] - tab_inv_sqrt[i+1])*/
-  L_y = L_msu(L_y, tmp, a);			/* L_y -=  tmp*a*2 */
-
-  L_y = L_shr(L_y, exp);		/* denormalization */
-
-  return(L_y);
+	Word16 exp, i, a, tmp;
+	Word32 L_y;
+	
+	if (L_x <=(Word32)0)
+		return ((Word32)0x3fffffff);
+	
+	
+	exp = norm_l(L_x);
+	L_x = L_shl(L_x, exp, top);		/* L_x is normalized */
+	
+	exp = sub((Word16)30, exp, top);
+	if ((exp & 1) == 0)			/* If exponant even->shift right */
+		L_x = L_shr(L_x, (Word16)1, top);
+	
+	exp = shr(exp, (Word16)1, top);
+	exp = add(exp, (Word16)1, top);
+	
+	L_x = L_shr(L_x, (Word16)9, top);
+	i   = extract_h(L_x);			/* Extract b25 - b31 */
+	L_x = L_shr(L_x, (Word16)1, top);
+	a   = extract_l(L_x);			/* Extract b10 - b24 */
+	a   = a & (Word16)0x7fff;
+	
+	i   = sub(i, (Word16)16, top);
+	
+	L_y = L_deposit_h(tab_inv_sqrt[i]);	/* tab_inv_sqrt[i] << 16 */
+	tmp = sub(tab_inv_sqrt[i], tab_inv_sqrt[i + 1], top);
+	/* tab_inv_sqrt[i] - tab_inv_sqrt[i + 1])*/
+	L_y = L_msu(L_y, tmp, a, top);			/* L_y -=  tmp*a*2 */
+	
+	L_y = L_shr(L_y, exp, top);		/* denormalization */
+	
+	return (L_y);
 }
 
 
@@ -122,21 +123,21 @@ Word32 inv_sqrt(Word32 L_x)
 *	Inputs :
 *
 *		L_x
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x0000 0000 <= L_x <= 0x7fff ffff.
 *
 *	Outputs :
 *
 *		exponant
 *			Integer part of Log2()
-*			16 bit  signed integer (Word16) whose value falls in the
+*			16 bit  signed integer(Word16) whose value falls in the
 *			range :   0 <= exponant <= 30
 *
 *		fraction
 *			Fractional part of Log2()
-*			16 bit signed integer (Word16) whose value falls in the
+*			16 bit signed integer(Word16) whose value falls in the
 *			range : 0x0000 0000 <= fraction <= 0x7fff.
-*			It's a Q15 value (point between b15 and b16).
+*			It's a Q15 value(point between b15 and b16).
 *
 *	Returned Value :
 *
@@ -144,50 +145,50 @@ Word32 inv_sqrt(Word32 L_x)
 *
 *	Algorithm :
 *
-*		The function Log2(L_x) is approximated by a table (tab_log2) 
+*		The function Log2(L_x) is approximated by a table(tab_log2) 
 *		and linear interpolation :
 *
 *			1 - Normalization of L_x
-*			2 - exponant = 30-exponant
-*			3 - i = bit25-b31 of L_x,    32 <= i <= 63  ->because of normalization
-*			4 - a = bit10-b24
+*			2 - exponant = 30 - exponant
+*			3 - i = bit25 - b31 of L_x,    32 <= i <= 63->because of normalization
+*			4 - a = bit10 - b24
 *			5 - i -=32
-*			6 - fraction = tab_log2[i]<<16 - (tab_log2[i] - tab_log2[i+1]) * a * 2
+*			6 - fraction = tab_log2[i] << 16 - (tab_log2[i] - tab_log2[i + 1]) * a * 2
 *
 ************************************************************************/
 
-void Log2(Word32 L_x, Word16 *exponant, Word16 *fraction)
+void Log2(Word32 L_x, Word16 *exponant, Word16 *fraction, tetra_op_t* top)
 {
-  Word16 exp, i, a, tmp;
-  Word32 L_y;
-
-  if( L_x <= (Word32)0 )
-  {
-    *exponant = 0;
-    *fraction = 0;
-    return;
-  }
-
-  exp = norm_l(L_x);
-  L_x = L_shl(L_x, exp );			/* L_x is normalized */
-  
-  *exponant = sub( (Word16)30, exp );
-
-  L_x = L_shr( L_x, (Word16)9 );
-  i   = extract_h(L_x);				/* Extract b25-b31 */
-  L_x = L_shr( L_x, (Word16)1 );
-  a   = extract_l(L_x);				/* Extract b10-b24 of fraction */
-  a   = a & (Word16)0x7fff;
-
-  i   = sub( i, (Word16)32 );
-
-  L_y = L_deposit_h(tab_log2[i]);		/* tab_log2[i] << 16 */
-  tmp = sub(tab_log2[i], tab_log2[i+1]);	/* tab_log2[i] - tab_log2[i+1] */
-  L_y = L_msu(L_y, tmp, a);			/* L_y -= tmp*a*2 */
-
-  *fraction = extract_h( L_y);
-
-  return;
+	Word16 exp, i, a, tmp;
+	Word32 L_y;
+	
+	if (L_x <=(Word32)0)
+	{
+		*exponant = 0;
+		*fraction = 0;
+		return;
+	}
+	
+	exp = norm_l(L_x);
+	L_x = L_shl(L_x, exp, top);			/* L_x is normalized */
+	
+	*exponant = sub((Word16)30, exp, top);
+	
+	L_x = L_shr(L_x, (Word16)9, top);
+	i   = extract_h(L_x);				/* Extract b25 - b31 */
+	L_x = L_shr(L_x, (Word16)1, top);
+	a   = extract_l(L_x);				/* Extract b10 - b24 of fraction */
+	a   = a & (Word16)0x7fff;
+	
+	i   = sub(i, (Word16)32, top);
+	
+	L_y = L_deposit_h(tab_log2[i]);		/* tab_log2[i] << 16 */
+	tmp = sub(tab_log2[i], tab_log2[i + 1], top);	/* tab_log2[i] - tab_log2[i + 1] */
+	L_y = L_msu(L_y, tmp, a, top);			/* L_y -= tmp*a*2 */
+	
+	*fraction = extract_h(L_y);
+	
+	return;
 }
 
 
@@ -205,14 +206,14 @@ void Log2(Word32 L_x, Word16 *exponant, Word16 *fraction)
 *
 *		exponant
 *			Integer part
-*			16 bit  signed integer (Word16) whose value falls in the
+*			16 bit  signed integer(Word16) whose value falls in the
 *			range :   0 <= exponant <= 30
 *
 *		fraction
 *			Fractional part
-*			16 bit signed integer (Word16) whose value falls in the
+*			16 bit signed integer(Word16) whose value falls in the
 *			range : 0x0000 0000 <= fraction <= 0x7fff.
-*			It's a Q15 value (point between b15 and b16).
+*			It's a Q15 value(point between b15 and b16).
 *
 *	Outputs :
 *
@@ -221,40 +222,40 @@ void Log2(Word32 L_x, Word16 *exponant, Word16 *fraction)
 *	Returned Value :
 *
 *		L_x
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x0000 0000 <= L_x <= 0x7fff ffff.
 *
 *	Algorithm :
 *
-*		The function pow2(L_x) is approximated by a table (tab_pow2)
+*		The function pow2(L_x) is approximated by a table(tab_pow2)
 *		and linear interpolation :
 *
-*			1 - i = bit11-b16 of fraction,   0 <= i <= 31
-*			2 - a = bit0-b10  of fraction
-*			3 - L_x = tab_pow2[i]<<16 - (tab_pow2[i] - tab_pow2[i+1]) * a * 2
-*			4 - L_x = L_x >> (30-exponant)     (with rounding)
+*			1 - i = bit11 - b16 of fraction,   0 <= i <= 31
+*			2 - a = bit0 - b10  of fraction
+*			3 - L_x = tab_pow2[i] << 16 - (tab_pow2[i] - tab_pow2[i + 1]) * a * 2
+*			4 - L_x = L_x >>(30 - exponant)(with rounding)
 *
 ************************************************************************/
 
-Word32 pow2(Word16 exponant, Word16 fraction)
+Word32 pow2(Word16 exponant, Word16 fraction, tetra_op_t* top)
 {
-  Word16 exp, i, a, tmp;
-  Word32 L_x;
-
-  L_x = L_deposit_l(fraction);
-  L_x = L_shl( L_x, (Word16)6 );
-  i   = extract_h(L_x);				/* Extract b10-b16 of fraction */
-  L_x = L_shr( L_x, (Word16)1 );
-  a   = extract_l(L_x);				/* Extract b0-b9   of fraction */
-  a   = a & (Word16)0x7fff;
-
-
-  L_x = L_deposit_h(tab_pow2[i]);		/* tab_pow2[i] << 16 */
-  tmp = sub(tab_pow2[i], tab_pow2[i+1]);	/* tab_pow2[i] - tab_pow2[i+1] */
-  L_x = L_msu(L_x, tmp, a);			/* L_x -= tmp*a*2  */
-
-  exp = sub( (Word16)30, exponant );
-  L_x = L_shr_r(L_x, exp);
-  return(L_x);
+	Word16 exp, i, a, tmp;
+	Word32 L_x;
+	
+	L_x = L_deposit_l(fraction);
+	L_x = L_shl(L_x, (Word16)6, top);
+	i   = extract_h(L_x);				/* Extract b10 - b16 of fraction */
+	L_x = L_shr(L_x, (Word16)1, top);
+	a   = extract_l(L_x);				/* Extract b0 - b9   of fraction */
+	a   = a & (Word16)0x7fff;
+	
+	
+	L_x = L_deposit_h(tab_pow2[i]);		/* tab_pow2[i] << 16 */
+	tmp = sub(tab_pow2[i], tab_pow2[i + 1], top);	/* tab_pow2[i] - tab_pow2[i + 1] */
+	L_x = L_msu(L_x, tmp, a, top);			/* L_x -= tmp*a*2  */
+	
+	exp = sub((Word16)30, exponant, top);
+	L_x = L_shr_r(L_x, exp, top);
+	return (L_x);
 }
 

@@ -16,7 +16,6 @@ tab_files = files(
 plugin_sources = [
   'gstacelpenc.c',
   'gstacelpenc.h',
-  'source.h',
   'fbas_tet.c',
   'fexp_tet.c',
   'fmat_tet.c',
@@ -24,16 +23,11 @@ plugin_sources = [
   'sub_dsp.c',
   'sub_sc_d.c',
   'tetra_op.c',
+  'structs.c',
+  'c_source.h',
+  'c_acelp.h',
+  'c_structs.h'
 #  'sdec_tet.c',
-#  'structs.c',
-#  'scoder.c',
-#  'sdecoder.c',
-#  'ccoder.c',
-#  'ccod_tet.c',
-#  'sub_cc.c',
-#  'cdecoder.c',
-#  'sub_cd.c',
-#  'cdec_tet.c'
 
 ]
 

@@ -5,11 +5,10 @@
 *	DESCRIPTION		:	Energy codebook in Q8.
 *
 ************************************************************************/
-#include <stdint.h>
 
 #define nb_qua_ener 64
 
-static const int16_t t_qua_ener[64*2] = 
+static const Word16 t_qua_ener[64*2] = 
 {
       12,       48,
       69,      287,

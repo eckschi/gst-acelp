@@ -3,15 +3,15 @@
 *	FILENAME		:	fexp_tet.c
 *
 *	DESCRIPTION		:	Library of special functions for operations in
-*					extended precision used in the TETRA speech codec
+*						extended precision used in the TETRA speech codec
 *
 ************************************************************************
 *
 *	FUNCTIONS		:	- L_comp()
-*					- L_extract()
-*					- mpy_mix()
-*					- mpy_32()
-*					- div_32()
+*						- L_extract()
+*						- mpy_mix()
+*						- mpy_32()
+*						- div_32()
 *
 ************************************************************************
 *
@@ -20,30 +20,30 @@
 ************************************************************************
 *
 *	COMMENTS		:	This subsection contains operations in double precision.
-*					These operations are non standard double precision 
-*					operations.
+*						These operations are non standard double precision 
+*						operations.
 *
-*					They are used where single precision is not enough but the 
-*					full 32 bits precision is not necessary. For example, the 
-*					function div_32() has a 24 bits precision.
+*						They are used where single precision is not enough but the 
+*						full 32 bits precision is not necessary. For example, the 
+*						function div_32() has a 24 bits precision.
 *
-*					The double precision numbers use a special representation :
+*						The double precision numbers use a special representation :
 *
-*					L_32 = hi<<15 + lo
+*						L_32 = hi << 15 + lo
 *
-*					L_32 is a 32 bit integer with b30 == b31.
-*					hi and lo are 16 bit signed integers.
-*					As the low part also contains the sign, this allows fast
-*					multiplication.
+*						L_32 is a 32 bit integer with b30 == b31.
+*						hi and lo are 16 bit signed integers.
+*						As the low part also contains the sign, this allows fast
+*						multiplication.
 *
-*					0xc000 0000 <= L_32 <= 0x3fff ffff.
+*						0xc000 0000 <= L_32 <= 0x3fff ffff.
 *
-*					In general, DPF is used to specify this special 
-*					format.
+*						In general, DPF is used to specify this special 
+*						format.
 *
 ************************************************************************/
 
-#include "source.h"
+#include "c_source.h"
 
 
 /************************************************************************
@@ -53,7 +53,7 @@
 *	Purpose :
 *
 *		Compose from two 16 bit DPF a normal 32 bit integer.
-*		L_32 = hi<<15 + lo
+*		L_32 = hi << 15 + lo
 *
 *	Complexity Weight : 2
 *
@@ -63,7 +63,7 @@
 *			msb
 *
 *		lo
-*			lsb (with sign)
+*			lsb(with sign)
 *
 *	Outputs :
 *
@@ -72,14 +72,14 @@
 *	Returned Value :
 *
 *		L_32
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0xc000 0000 <= L_32 <= 0x3fff ffff.
 *
 ************************************************************************/
 
-Word32 L_comp(Word16 hi, Word16 lo)
+Word32 L_comp(Word16 hi, Word16 lo, tetra_op_t* top)
 {
-  return(add_sh( Load_sh( lo,(Word16)0 ), hi, (Word16)15 ));
+	return (add_sh(Load_sh(lo, (Word16)0, top), hi, (Word16)15, top));
 }
 
 
@@ -96,7 +96,7 @@ Word32 L_comp(Word16 hi, Word16 lo)
 *	Inputs :
 *
 *		L_32
-*			32 bit long signed integer (Word32) with b30 == b31
+*			32 bit long signed integer(Word32) with b30 == b31
 *			whose value falls in the range : 0xc000 0000 <= L_32 <= 0x3fff ffff.
 *
 *	Outputs :
@@ -105,7 +105,7 @@ Word32 L_comp(Word16 hi, Word16 lo)
 *			b15 to b30 of L_32
 *
 *		lo
-*			L_32 - hi<<15
+*			L_32 - hi << 15
 *
 *	Returned Value :
 *
@@ -113,11 +113,11 @@ Word32 L_comp(Word16 hi, Word16 lo)
 *
 ************************************************************************/
 
-void L_extract(Word32 L_32, Word16 *hi, Word16 *lo)
+void L_extract(Word32 L_32, Word16 *hi, Word16 *lo, tetra_op_t* top)
 {
-  *hi  = extract_h( L_shl( L_32,(Word16)1 ) );
-  *lo  = extract_l( sub_sh( L_32, *hi, (Word16)15 ) );
-  return;
+	*hi  = extract_h(L_shl(L_32, (Word16)1, top));
+	*lo  = extract_l(sub_sh(L_32, *hi, (Word16)15, top));
+	return;
 }
 
 
@@ -127,9 +127,9 @@ void L_extract(Word32 L_32, Word16 *hi, Word16 *lo)
 *
 *	Purpose :
 *
-*		Multiply a 16 bit integer by a 32 bit (DPF). 
+*		Multiply a 16 bit integer by a 32 bit(DPF). 
 *		The result is divided by 2**16
-*		L_32 = hi1*lo2 + (lo1*lo2)>>15
+*		L_32 = hi1*lo2 + (lo1*lo2) >> 15
 *
 *	Complexity Weight : 4
 *
@@ -151,20 +151,20 @@ void L_extract(Word32 L_32, Word16 *hi, Word16 *lo)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x0000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
-Word32 mpy_mix(Word16 hi1, Word16 lo1, Word16 lo2)
+Word32 mpy_mix(Word16 hi1, Word16 lo1, Word16 lo2, tetra_op_t* top)
 {
-  Word16 p1;
-  Word32 L_32;
-
-  p1   = extract_h(L_mult0(lo1, lo2));
-  L_32 = L_mult0(hi1,lo2 );
-
-  return(add_sh( L_32, p1, (Word16)1 ));
+	Word16 p1;
+	Word32 L_32;
+	
+	p1   = extract_h(L_mult0(lo1, lo2));
+	L_32 = L_mult0(hi1, lo2);
+	
+	return (add_sh(L_32, p1, (Word16)1, top));
 }
 
 
@@ -174,8 +174,8 @@ Word32 mpy_mix(Word16 hi1, Word16 lo1, Word16 lo2)
 *
 *	Purpose :
 *
-*		Multiply two 32 bit integers (DPF). The result is divided by 2**32
-*		L_32 = hi1*hi2 + (hi1*lo2)>>15 + (lo1*hi2)>>15)
+*		Multiply two 32 bit integers(DPF). The result is divided by 2**32
+*		L_32 = hi1*hi2 + (hi1*lo2) >> 15 + (lo1*hi2) >> 15)
 *
 *	Complexity Weight : 7
 *
@@ -200,22 +200,22 @@ Word32 mpy_mix(Word16 hi1, Word16 lo1, Word16 lo2)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x0000 0000 <= L_var_out <= 0x7fff ffff.
 *
 *************************************************************************/
 
-Word32 mpy_32(Word16 hi1, Word16 lo1, Word16 hi2, Word16 lo2)
+Word32 mpy_32(Word16 hi1, Word16 lo1, Word16 hi2, Word16 lo2, tetra_op_t* top)
 {
-  Word16 p1, p2;
-  Word32 L_32;
-
-  p1   = extract_h(L_mult0(hi1, lo2));
-  p2   = extract_h(L_mult0(lo1, hi2));
-  L_32 = L_mult0(hi1, hi2);
-  L_32 = add_sh( L_32, p1, (Word16)1 );
-
-  return(add_sh( L_32, p2, (Word16)1 ));
+	Word16 p1, p2;
+	Word32 L_32;
+	
+	p1   = extract_h(L_mult0(hi1, lo2));
+	p2   = extract_h(L_mult0(lo1, hi2));
+	L_32 = L_mult0(hi1, hi2);
+	L_32 = add_sh(L_32, p1, (Word16)1, top);
+	
+	return (add_sh(L_32, p2, (Word16)1, top));
 }
 
 
@@ -228,7 +228,7 @@ Word32 mpy_32(Word16 hi1, Word16 lo1, Word16 hi2, Word16 lo2)
 *		Fractionnal integer division of two 32 bit numbers.
 *		L_num / L_denom
 *		L_num and L_denom must be positive and L_num < L_denom
-*		L_denom = denom_hi<<15 + denom_lo
+*		L_denom = denom_hi << 15 + denom_lo
 *		denom_hi is a normalized number
 *		The result is in Q30
 *
@@ -237,10 +237,10 @@ Word32 mpy_32(Word16 hi1, Word16 lo1, Word16 hi2, Word16 lo2)
 *	Inputs :
 *
 *		L_num
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x0000 0000 <= L_num <= L_denom.
 *
-*		(L_denom = denom_hi<<15 + denom_lo)
+* (L_denom = denom_hi << 15 + denom_lo)
 *
 *		denom_hi
 *			16 bit normalized integer whose value falls in the
@@ -257,47 +257,47 @@ Word32 mpy_32(Word16 hi1, Word16 lo1, Word16 hi2, Word16 lo2)
 *	Returned Value :
 *
 *		L_div
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x0000 0000 <= L_div <= 0x3fff ffff.
-*			L_div is a Q30 value (point between b30 and b29)
+*			L_div is a Q30 value(point between b30 and b29)
 *
 *	Algorithm :
 *
 *		 - find = 1/L_denom
 *			First approximation: approx = 1 / denom_hi
-*			1/L_denom = approx * (2.0 - L_denom * approx )
+*			1/L_denom = approx * (2.0 - L_denom * approx)
 *		-  result = L_num * (1/L_denom)
 *
 ************************************************************************/
 
-Word32 div_32(Word32 L_num, Word16 denom_hi, Word16 denom_lo)
+Word32 div_32(Word32 L_num, Word16 denom_hi, Word16 denom_lo, tetra_op_t* top)
 {
-  Word16 approx, hi, lo, n_hi, n_lo;
-  Word32 t0;
+	Word16 approx, hi, lo, n_hi, n_lo;
+	Word32 t0;
+	
+	
+	/* First approximation: 1 / L_denom = 1/denom_hi */
+	
+	approx = div_s((Word16)0x3fff, denom_hi, top);	/* result in Q15 */
+	
 
 
-  /* First approximation: 1 / L_denom = 1/denom_hi */
-
-  approx = div_s( (Word16)0x3fff, denom_hi);	/* result in Q15 */
-
- 
- 
-/* 1/L_denom = approx * (2.0 - L_denom * approx) */
-
-  t0 = mpy_mix(denom_hi, denom_lo, approx);	/* result in Q29 */
-
-  t0 = L_sub( (Word32)0x40000000, t0);		/* result in Q29 */
-
-  L_extract(t0, &hi, &lo);
-
-  t0 = mpy_mix(hi, lo, approx);			/* = 1/L_denom in Q28 */
-
-  /* L_num * (1/L_denom) */
-
-  L_extract(t0, &hi, &lo);
-  L_extract(L_num, &n_hi, &n_lo);
-  t0 = mpy_32(n_hi, n_lo, hi, lo);
-
-  return( L_shl( t0,(Word16)2) );			/* From Q28 to Q30 */
+	/* 1/L_denom = approx * (2.0 - L_denom * approx) */
+	
+	t0 = mpy_mix(denom_hi, denom_lo, approx, top);	/* result in Q29 */
+	
+	t0 = L_sub((Word32)0x40000000, t0, top);		/* result in Q29 */
+	
+	L_extract(t0, &hi, &lo, top);
+	
+	t0 = mpy_mix(hi, lo, approx, top);			/* = 1/L_denom in Q28 */
+	
+	/* L_num * (1/L_denom) */
+	
+	L_extract(t0, &hi, &lo, top);
+	L_extract(L_num, &n_hi, &n_lo, top);
+	t0 = mpy_32(n_hi, n_lo, hi, lo, top);
+	
+	return (L_shl(t0, (Word16)2, top));			/* From Q28 to Q30 */
 }
 

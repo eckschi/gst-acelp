@@ -7,64 +7,61 @@
 ************************************************************************
 *
 *	FUNCTIONS		:	- abs_s()
-*					- add()
-*					- div_s()
-*					- extract_h()
-*					- extract_l()
-*					- L_abs()
-*					- L_add()
-*					- L_deposit_h()
-*					- L_deposit_l()
-*					- L_mac()
-*					- L_mac0()
-*					- L_msu()
-*					- L_msu0()
-*					- L_mult()
-*					- L_mult0()
-*					- L_negate()
-*					- L_shl()
-*					- L_shr()
-*					- L_shr_r()
-*					- L_sub()
-*					- mult()
-*					- mult_r()
-*					- negate()
-*					- norm_l()
-*					- norm_s()
-*					- round()
-*					- sature()
-*					- shl()
-*					- shr()
-*					- sub()
+*						- add()
+*						- div_s()
+*						- extract_h()
+*						- extract_l()
+*						- L_abs()
+*						- L_add()
+*						- L_deposit_h()
+*						- L_deposit_l()
+*						- L_mac()
+*						- L_mac0()
+*						- L_msu()
+*						- L_msu0()
+*						- L_mult()
+*						- L_mult0()
+*						- L_negate()
+*						- L_shl()
+*						- L_shr()
+*						- L_shr_r()
+*						- L_sub()
+*						- mult()
+*						- mult_r()
+*						- negate()
+*						- norm_l()
+*						- norm_s()
+*						- acelp_round()
+*						- sature()
+*						- shl()
+*						- shr()
+*						- sub()
 *
 *	COMMENTS		:	Only the operators used in the actual version
-*					of the TETRA codec are included in this file
+*						of the TETRA codec are included in this file
 *
 ************************************************************************
 *
 *	INCLUDED FILES	:	source.h
-*					stdio.h
-*					stdlib.h
+*						stdio.h
+*						stdlib.h
 *
 ************************************************************************/
 
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "source.h"
+#include "c_source.h"
 
 /*-----------------*
  * Local Functions *
  *-----------------*/
 
-Word16 sature(Word32 L_var1);
+Word16 sature(Word32 L_var1, tetra_op_t* top);
 
 /*-----------------------*
  * Constants and Globals *
  *-----------------------*/
-
-Flag Overflow =0;
-Flag Carry =0;
 
 
 /************************************************************************
@@ -80,7 +77,7 @@ Flag Carry =0;
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -90,33 +87,33 @@ Flag Carry =0;
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0x0000 0000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
 Word16 abs_s(Word16 var1)
-  {
-   Word16 var_out;
-
-   if (var1 == (Word16)0X8000 )
-     {
-      var_out = MAX_16;
-     }
-   else
-     {
-      if (var1 < 0)
- {
-  var_out = -var1;
- }
-      else
- {
-  var_out = var1;
- }
-     }
-
-   return(var_out);
-  }
+{
+	Word16 var_out;
+	
+	if (var1 ==(Word16)0X8000)
+	{
+		var_out = MAX_16;
+	}
+	else
+	{
+		if (var1 < 0)
+		{
+			var_out = -var1;
+		}
+		else
+		{
+			var_out = var1;
+		}
+	}
+	
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -124,7 +121,7 @@ Word16 abs_s(Word16 var1)
 *
 *	Purpose :
 *
-*		Performs the addition (var1+var2) with overflow control and saturation;|
+*		Performs the addition(var1 + var2) with overflow control and saturation;|
 *		the 16 bit result is set at +32767 when overflow occurs or at -32768
 *		when underflow occurs.
 *
@@ -133,11 +130,11 @@ Word16 abs_s(Word16 var1)
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -147,20 +144,20 @@ Word16 abs_s(Word16 var1)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
-Word16 add(Word16 var1,Word16 var2)
-  {
-   Word16 var_out;
-   Word32 L_somme;
-
-   L_somme = (Word32) var1 + var2;
-   var_out = sature(L_somme);
-   return(var_out);
-  }
+Word16 add(Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word16 var_out;
+	Word32 L_somme;
+	
+	L_somme = (Word32) var1 + var2;
+	var_out = sature(L_somme, top);
+	return (var_out);
+}
 
 
 /************************************************************************
@@ -171,20 +168,20 @@ Word16 add(Word16 var1,Word16 var2)
 *
 *		Produces a result which is the fractionnal integer division of var1 by
 *		var2; var1 and var2 must be positive and var2 must be greater or equal
-*		to var1; the result is positive (leading bit equal to 0) and truncated
+*		to var1; the result is positive(leading bit equal to 0) and truncated
 *		to 16 bits.
-*		If var1 = var2 then div(var1,var2) = 32767.
+*		If var1 = var2 then div(var1, var2) = 32767.
 *
 *	Complexity Weight : 18
 *
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0x0000 0000 <= var1 <= var2 and var2 != 0.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : var1 <= var2 <= 0x0000 7fff and var2 != 0.
 *
 *	Outputs :
@@ -194,62 +191,66 @@ Word16 add(Word16 var1,Word16 var2)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0x0000 0000 <= var_out <= 0x0000 7fff.
-*			It's a Q15 value (point between b15 and b14).
+*			It's a Q15 value(point between b15 and b14).
 *
 ************************************************************************/
 
-Word16 div_s(Word16 var1, Word16 var2)
-  {
-   Word16 var_out = 0;
-   Word16 iteration;
-   Word32 L_num;
-   Word32 L_denom;
-
-   if ((var1 > var2) || (var1 < 0) || (var2 < 0))
-     {
-      printf("Division Error\n");
-      exit(0);
-     }
-
-   if (var2 == 0)
-     {
-      printf("Division by 0, Fatal error \n");
-      exit(0);
-     }
-
-   if (var1 == 0)
-     {
-      var_out = 0;
-     }
-   else
-     {
-      if (var1 == var2)
- {
-  var_out = MAX_16;
- }
-      else
- {
-  L_num = L_deposit_l(var1);
-  L_denom = L_deposit_l(var2);
-
-  for(iteration=0;iteration<15;iteration++)
-    {
-     var_out <<=1;
-     L_num <<= 1;
-
-     if (L_num >= L_denom)
-       {
-        L_num = L_sub(L_num,L_denom);
-        var_out = add( var_out,(Word16)1 );
-       }
-    }
- }
-     }
-
-   return(var_out);
-  }
+Word16 div_s(Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word16 var_out = 0;
+	Word16 iteration;
+	Word32 L_num;
+	Word32 L_denom;
+	
+	if ((var1 > var2) || (var1 < 0) || (var2 < 0))
+	{
+	#ifdef	PRINT_ERRORS
+		printf("Division Error\n");
+	#endif
+		exit(0);
+	}
+	
+	if (var2 == 0)
+	{
+	#ifdef PRINT_ERRORS
+		printf("Division by 0, Fatal error \n");
+	#endif
+		exit(0);
+	}
+	
+	if (var1 == 0)
+	{
+		var_out = 0;
+	}
+	else
+	{
+		if (var1 == var2)
+		{
+			var_out = MAX_16;
+		}
+		else
+		{
+			L_num = L_deposit_l(var1);
+			L_denom = L_deposit_l(var2);
+			
+			for (iteration = 0; iteration < 15; iteration++)
+			{
+				var_out <<=1;
+				L_num <<= 1;
+				
+				if (L_num >= L_denom)
+				{
+					L_num = L_sub(L_num, L_denom, top);
+					var_out = add(var_out, (Word16)1, top);
+				}
+			}
+		}
+	}
+	
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -264,7 +265,7 @@ Word16 div_s(Word16 var1, Word16 var2)
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32 ) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *	Outputs :
@@ -274,18 +275,18 @@ Word16 div_s(Word16 var1, Word16 var2)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
 Word16 extract_h(Word32 L_var1)
-  {
-   Word16 var_out;
-
-   var_out = (Word16) (L_var1 >> 16);
-   return(var_out);
-  }
+{
+	Word16 var_out;
+	
+	var_out = (Word16)(L_var1 >> 16);
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -300,7 +301,7 @@ Word16 extract_h(Word32 L_var1)
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32 ) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *	Outputs :
@@ -310,18 +311,18 @@ Word16 extract_h(Word32 L_var1)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
 Word16 extract_l(Word32 L_var1)
-  {
-   Word16 var_out;
-
-   var_out = (Word16) L_var1;
-   return(var_out);
-  }
+{
+	Word16 var_out;
+	
+	var_out = (Word16) L_var1;
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -336,7 +337,7 @@ Word16 extract_l(Word32 L_var1)
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *	Outputs :
@@ -346,33 +347,33 @@ Word16 extract_l(Word32 L_var1)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x0000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
 Word32 L_abs(Word32 L_var1)
-  {
-   Word32 L_var_out;
-
-   if (L_var1 == MIN_32)
-     {
-      L_var_out = MAX_32;
-     }
-   else
-     {
-      if (L_var1 < 0)
- {
-  L_var_out = -L_var1;
- }
-      else
- {
-  L_var_out = L_var1;
- }
-     }
-
-   return(L_var_out);
-  }
+{
+	Word32 L_var_out;
+	
+	if (L_var1 == MIN_32)
+	{
+		L_var_out = MAX_32;
+	}
+	else
+	{
+		if (L_var1 < 0)
+		{
+			L_var_out = -L_var1;
+		}
+		else
+		{
+			L_var_out = L_var1;
+		}
+	}
+	
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -380,7 +381,7 @@ Word32 L_abs(Word32 L_var1)
 *
 *	Purpose :
 *
-*		32 bits addition of the two 32 bits variables (L_var1+L_var2) with
+*		32 bits addition of the two 32 bits variables(L_var1 + L_var2) with
 *		overflow control and saturation; the result is set at +214783647 when
 *		overflow occurs or at -214783648 when underflow occurs.
 *
@@ -389,11 +390,11 @@ Word32 L_abs(Word32 L_var1)
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *		L_var2
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var2 <= 0x7fff ffff.
 *
 *	Outputs :
@@ -403,27 +404,27 @@ Word32 L_abs(Word32 L_var1)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
-Word32 L_add(Word32 L_var1, Word32 L_var2)
-  {
-   Word32 L_var_out;
-
-   L_var_out = L_var1 + L_var2;
-
-   if (((L_var1 ^ L_var2) & MIN_32) == 0)
-     {
-      if ((L_var_out ^ L_var1) & MIN_32)
+Word32 L_add(Word32 L_var1, Word32 L_var2, tetra_op_t* top)
+{
+	Word32 L_var_out;
+	
+	L_var_out = L_var1 + L_var2;
+	
+	if (((L_var1 ^ L_var2) & MIN_32) == 0)
+	{
+		if ((L_var_out ^ L_var1) & MIN_32)
         {
-  L_var_out = (L_var1 < 0) ? MIN_32 : MAX_32;
-         Overflow = 1;
+			L_var_out = (L_var1 < 0) ? MIN_32 : MAX_32;
+			top->Overflow = 1;
         }
-     }
-   return(L_var_out);
-  }
+	}
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -439,7 +440,7 @@ Word32 L_add(Word32 L_var1, Word32 L_var2)
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -449,18 +450,18 @@ Word32 L_add(Word32 L_var1, Word32 L_var2)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= var_out <= 0x7fff 0000.
 *
 ************************************************************************/
 
 Word32 L_deposit_h(Word16 var1)
-  {
-   Word32 L_var_out;
-
-   L_var_out = (Word32) var1 << 16;
-   return(L_var_out);
-  }
+{
+	Word32 L_var_out;
+	
+	L_var_out = (Word32) var1 << 16;
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -476,7 +477,7 @@ Word32 L_deposit_h(Word16 var1)
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -486,18 +487,18 @@ Word32 L_deposit_h(Word16 var1)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0xFFFF 8000 <= L_var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
 Word32 L_deposit_l(Word16 var1)
-  {
-   Word32 L_var_out;
-
-   L_var_out = (Word32) var1;
-   return(L_var_out);
-  }
+{
+	Word32 L_var_out;
+	
+	L_var_out = (Word32) var1;
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -507,22 +508,22 @@ Word32 L_deposit_l(Word16 var1)
 *
 *		Multiply var1 by var2 and shift the result left by 1. Add the 32 bit
 *		result to L_var3 with saturation, return a 32 bit result:
-*			L_mac(L_var3,var1,var2) = L_add(L_var3,(L_mult(var1,var2)).
+*			L_mac(L_var3, var1, var2) = L_add(L_var3, (L_mult(var1, var2)).
 *
 *	Complexity Weight : 1
 *
 *	Inputs :
 *
 *		L_var3
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var3 <= 0x7fff ffff.
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -532,20 +533,20 @@ Word32 L_deposit_l(Word16 var1)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
-Word32 L_mac(Word32 L_var3, Word16 var1, Word16 var2)
-  {
-   Word32 L_var_out;
-   Word32 L_produit;
-
-   L_produit = L_mult(var1,var2);
-   L_var_out = L_add(L_var3,L_produit);
-   return(L_var_out);
-  }
+Word32 L_mac(Word32 L_var3, Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word32 L_var_out;
+	Word32 L_produit;
+	
+	L_produit = L_mult(var1, var2, top);
+	L_var_out = L_add(L_var3, L_produit, top);
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -562,15 +563,15 @@ Word32 L_mac(Word32 L_var3, Word16 var1, Word16 var2)
 *	Inputs :
 *
 *		L_var3
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var3 <= 0x7fff ffff.
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -580,20 +581,20 @@ Word32 L_mac(Word32 L_var3, Word16 var1, Word16 var2)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
-Word32 L_mac0(Word32 L_var3, Word16 var1, Word16 var2)
-  {
-   Word32 L_var_out;
-   Word32 L_produit;
-
-   L_produit = L_mult0(var1,var2);
-   L_var_out = L_add(L_var3,L_produit);
-   return(L_var_out);
-  }
+Word32 L_mac0(Word32 L_var3, Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word32 L_var_out;
+	Word32 L_produit;
+	
+	L_produit = L_mult0(var1, var2);
+	L_var_out = L_add(L_var3, L_produit, top);
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -603,22 +604,22 @@ Word32 L_mac0(Word32 L_var3, Word16 var1, Word16 var2)
 *
 *		Multiply var1 by var2 and shift the result left by 1. Subtract the 32
 *		bit result to L_var3 with saturation, return a 32 bit result:
-*			L_msu(L_var3,var1,var2) = L_sub(L_var3,(L_mult(var1,var2)).
+*			L_msu(L_var3, var1, var2) = L_sub(L_var3, (L_mult(var1, var2)).
 *
 *	Complexity Weight : 1
 *
 *	Inputs :
 *
 *		L_var3
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var3 <= 0x7fff ffff.
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -628,20 +629,20 @@ Word32 L_mac0(Word32 L_var3, Word16 var1, Word16 var2)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
-Word32 L_msu(Word32 L_var3, Word16 var1, Word16 var2)
-  {
-   Word32 L_var_out;
-   Word32 L_produit;
-
-   L_produit = L_mult(var1,var2);
-   L_var_out = L_sub(L_var3,L_produit);
-   return(L_var_out);
-  }
+Word32 L_msu(Word32 L_var3, Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word32 L_var_out;
+	Word32 L_produit;
+	
+	L_produit = L_mult(var1, var2, top);
+	L_var_out = L_sub(L_var3, L_produit, top);
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -658,15 +659,15 @@ Word32 L_msu(Word32 L_var3, Word16 var1, Word16 var2)
 *	Inputs :
 *
 *		L_var3
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var3 <= 0x7fff ffff.
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -676,20 +677,20 @@ Word32 L_msu(Word32 L_var3, Word16 var1, Word16 var2)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
-Word32 L_msu0(Word32 L_var3, Word16 var1, Word16 var2)
-  {
-   Word32 L_var_out;
-   Word32 L_produit;
-
-   L_produit = L_mult0(var1,var2);
-   L_var_out = L_sub(L_var3,L_produit);
-   return(L_var_out);
-  }
+Word32 L_msu0(Word32 L_var3, Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word32 L_var_out;
+	Word32 L_produit;
+	
+	L_produit = L_mult0(var1, var2);
+	L_var_out = L_sub(L_var3, L_produit, top);
+	return (L_var_out);
+}
 
 
 /************************************************************************
@@ -700,19 +701,19 @@ Word32 L_msu0(Word32 L_var3, Word16 var1, Word16 var2)
 *
 *		L_mult is the 32 bit result of the multiplication of var1 times var2
 *		with one shift left i.e.:
-*			L_mult(var1,var2) = shl((var1 times var2),1) and
-*			L_mult(-32768,-32768) = 2147483647.
+*			L_mult(var1, var2) = shl((var1 times var2), 1) and
+*			L_mult(-32768, - 32768) = 2147483647.
 *
 *	Complexity Weight : 1
 *
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -722,28 +723,28 @@ Word32 L_msu0(Word32 L_var3, Word16 var1, Word16 var2)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
-Word32 L_mult(Word16 var1,Word16 var2)
-  {
-   Word32 L_var_out;
-
-   L_var_out = (Word32)var1 * (Word32)var2;
-   if (L_var_out != (Word32)0x40000000)
-     {
-      L_var_out *= 2;
-     }
-   else
-     {
-      Overflow = 1;
-      L_var_out = MAX_32;
-     }
-
-   return(L_var_out);
-  }
+Word32 L_mult(Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word32 L_var_out;
+	
+	L_var_out = (Word32)var1 * (Word32)var2;
+	if (L_var_out !=(Word32)0x40000000)
+	{
+		L_var_out *= 2;
+	}
+	else
+	{
+		top->Overflow = 1;
+		L_var_out = MAX_32;
+	}
+	
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -759,11 +760,11 @@ Word32 L_mult(Word16 var1,Word16 var2)
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -773,18 +774,18 @@ Word32 L_mult(Word16 var1,Word16 var2)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
 Word32 L_mult0(Word16 var1, Word16 var2)
 {
-  Word32 L_var_out;
-
-  L_var_out = (Word32)var1 * (Word32)var2;
-
-  return(L_var_out);
+	Word32 L_var_out;
+	
+	L_var_out = (Word32)var1 * (Word32)var2;
+	
+	return (L_var_out);
 }
 
 
@@ -795,14 +796,14 @@ Word32 L_mult0(Word16 var1, Word16 var2)
 *	Purpose :
 *
 *		Negate the 32 bit variable L_var1 with saturation; saturate in the case
-*		where input is -2147483648 (0x8000 0000).
+*		where input is -2147483648(0x8000 0000).
 *
 *	Complexity Weight : 2
 *
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *	Outputs :
@@ -812,18 +813,18 @@ Word32 L_mult0(Word16 var1, Word16 var2)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
 Word32 L_negate(Word32 L_var1)
-  {
-   Word32 L_var_out;
-
-   L_var_out = (L_var1 == MIN_32) ? MAX_32 : -L_var1;
-   return(L_var_out);
-  }
+{
+	Word32 L_var_out;
+	
+	L_var_out = (L_var1 == MIN_32) ? MAX_32 : -L_var1;
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -831,7 +832,8 @@ Word32 L_negate(Word32 L_var1)
 *
 *	Purpose :
 *
-*		Arithmetically shift the 32 bit input L_var1 left var2 positions. Zero fill the var2 LSB *		of the result. If var2 is negative, L_var1 right by -var2 arithmetically shift with sign 
+*		Arithmetically shift the 32 bit input L_var1 left var2 positions. Zero fill the var2 LSB 
+*		of the result. If var2 is negative, L_var1 right by -var2 arithmetically shift with sign 
 *		extension. Saturate the result in case of underflows or overflows.
 *
 *	Complexity Weight : 2
@@ -839,11 +841,11 @@ Word32 L_negate(Word32 L_var1)
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -853,42 +855,42 @@ Word32 L_negate(Word32 L_var1)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
-Word32 L_shl(Word32 L_var1, Word16 var2)
-  {
-   Word32 L_var_out;
-if (var2 <= 0)
-     {
-      L_var_out = L_shr( L_var1, (Word16)(-var2) );
-     }
-   else
-     {
-      for(;var2>0;var2--)
+Word32 L_shl(Word32 L_var1, Word16 var2, tetra_op_t* top)
+{
+	Word32 L_var_out;
+	if (var2 <= 0)
+	{
+		L_var_out = L_shr(L_var1, (Word16)(-var2), top);
+	}
+	else
+	{
+		for (; var2 > 0; var2--)
         {
-         if (L_var1 > (Word32) 0X3fffffff)
-           {
-            Overflow = 1;
-            L_var_out = MAX_32;
-            break;
-           }
-         else
-           {
-            if (L_var1 < (Word32) 0xc0000000)
-              {
-               Overflow = 1;
-               L_var_out = MIN_32;
-               break;
-              }
-           }
-         L_var1 *= 2;
-         L_var_out = L_var1;
+			if (L_var1 > (Word32) 0X3fffffff)
+			{
+				top->Overflow = 1;
+				L_var_out = MAX_32;
+				break;
+			}
+			else
+			{
+				if (L_var1 < (Word32) 0xc0000000)
+				{
+					top->Overflow = 1;
+					L_var_out = MIN_32;
+					break;
+				}
+			}
+			L_var1 *= 2;
+			L_var_out = L_var1;
         }
-     }
-   return(L_var_out);
-  }
+	}
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -906,11 +908,11 @@ if (var2 <= 0)
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -920,39 +922,39 @@ if (var2 <= 0)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
-Word32 L_shr(Word32 L_var1, Word16 var2)
-  {
-   Word32 L_var_out;
-
-   if (var2 < 0)
-     {
-      L_var_out = L_shl( L_var1,(Word16)(-var2) );
-     }
-   else
-     {
-      if (var2 >= 31)
- {
-  L_var_out = (L_var1 < 0L) ? -1 : 0;
- }
-      else
- {
-  if (L_var1<0)
-    {
-     L_var_out = ~((~L_var1) >> var2);
-    }
-  else
-    {
-     L_var_out = L_var1 >> var2;
-    }
- }
-     }
-   return(L_var_out);
-  }
+Word32 L_shr(Word32 L_var1, Word16 var2, tetra_op_t* top)
+{
+	Word32 L_var_out;
+	
+	if (var2 < 0)
+	{
+		L_var_out = L_shl(L_var1, (Word16)(-var2), top);
+	}
+	else
+	{
+		if (var2 >= 31)
+		{
+			L_var_out = (L_var1 < 0L) ? -1 : 0;
+		}
+		else
+		{
+			if (L_var1 < 0)
+			{
+				L_var_out = ~((~L_var1) >> var2);
+			}
+			else
+			{
+				L_var_out = L_var1 >> var2;
+			}
+		}
+	}
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -960,23 +962,23 @@ Word32 L_shr(Word32 L_var1, Word16 var2)
 *
 *	Purpose :
 *
-*		Same as L_shr(L_var1,var2)but with rounding. Saturate the result in case|
+*		Same as L_shr(L_var1, var2)but with rounding. Saturate the result in case|
 *		of underflows or overflows :
 *		If var2 is greater than zero :
-*			L_shr_r(var1,var2) = L_shr(L_add(L_var1,2**(var2-1)),var2)
+*			L_shr_r(var1, var2) = L_shr(L_add(L_var1, 2** (var2 - 1)), var2)
 *		If var2 is less than zero :
-*			L_shr_r(var1,var2) = L_shr(L_var1,var2).
+*			L_shr_r(var1, var2) = L_shr(L_var1, var2).
 *
 *	Complexity Weight : 3
 *
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -986,32 +988,32 @@ Word32 L_shr(Word32 L_var1, Word16 var2)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
-Word32 L_shr_r(Word32 L_var1,Word16 var2)
-  {
-   Word32 L_var_out;
-
-   if (var2 > 31)
-     {
-      L_var_out = 0;
-     }
-   else
-     {
-      L_var_out = L_shr(L_var1,var2);
-      if (var2 > 0)
- {
-  if ( (L_var1 & ( (Word32)1 << (var2-1) )) != 0)
-    {
-     L_var_out++;
-    }
- }
-     }
-   return(L_var_out);
-  }
+Word32 L_shr_r(Word32 L_var1, Word16 var2, tetra_op_t* top)
+{
+	Word32 L_var_out;
+	
+	if (var2 > 31)
+	{
+		L_var_out = 0;
+	}
+	else
+	{
+		L_var_out = L_shr(L_var1, var2, top);
+		if (var2 > 0)
+		{
+			if ((L_var1 & ((Word32)1 <<(var2 - 1))) != 0)
+			{
+				L_var_out++;
+			}
+		}
+	}
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -1019,7 +1021,7 @@ Word32 L_shr_r(Word32 L_var1,Word16 var2)
 *
 *	Purpose :
 *
-*		32 bits subtraction of the two 32 bits variables (L_var1-L_var2) with
+*		32 bits subtraction of the two 32 bits variables(L_var1 - L_var2) with
 *		overflow control and saturation; the result is set at +214783647 when
 *		overflow occurs or at -214783648 when underflow occurs.
 *
@@ -1028,11 +1030,11 @@ Word32 L_shr_r(Word32 L_var1,Word16 var2)
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *		L_var2
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var2 <= 0x7fff ffff.
 *
 *	Outputs :
@@ -1042,27 +1044,27 @@ Word32 L_shr_r(Word32 L_var1,Word16 var2)
 *	Returned Value :
 *
 *		L_var_out
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.
 *
 ************************************************************************/
 
-Word32 L_sub(Word32 L_var1, Word32 L_var2)
-  {
-   Word32 L_var_out;
-
-   L_var_out = L_var1 - L_var2;
-
-   if (((L_var1 ^ L_var2) & MIN_32) != 0)
-     {
-      if ((L_var_out ^ L_var1) & MIN_32)
+Word32 L_sub(Word32 L_var1, Word32 L_var2, tetra_op_t* top)
+{
+	Word32 L_var_out;
+	
+	L_var_out = L_var1 - L_var2;
+	
+	if (((L_var1 ^ L_var2) & MIN_32) != 0)
+	{
+		if ((L_var_out ^ L_var1) & MIN_32)
         {
-  L_var_out = (L_var1 < 0L) ? MIN_32 : MAX_32;
-         Overflow = 1;
+			L_var_out = (L_var1 < 0L) ? MIN_32 : MAX_32;
+			top->Overflow = 1;
         }
-     }
-   return(L_var_out);
-  }
+	}
+	return (L_var_out);
+}
 
 /************************************************************************
 *
@@ -1072,19 +1074,19 @@ Word32 L_sub(Word32 L_var1, Word32 L_var2)
 *
 *		Performs the multiplication of var1 by var2 and gives a 16 bit result
 *		which is scaled i.e.:
-*			mult(var1,var2) = shr((var1 times var2),15) and
-*			mult(-32768,-32768) = 32767.
+*			mult(var1, var2) = shr((var1 times var2), 15) and
+*			mult(-32768, - 32768) = 32767.
 *
 *	Complexity Weight : 1
 *
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -1094,26 +1096,26 @@ Word32 L_sub(Word32 L_var1, Word32 L_var2)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
-Word16 mult(Word16 var1, Word16 var2)
-  {
-   Word16 var_out;
-   Word32 L_produit;
-
-   L_produit = (Word32)var1 * (Word32)var2;
-
-   L_produit = (L_produit & (Word32) 0xffff8000) >> 15;
-
-   if (L_produit & (Word32) 0x00010000)
-     L_produit = L_produit | (Word32) 0xffff0000;
-
-   var_out = sature(L_produit);
-   return(var_out);
-  }
+Word16 mult(Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word16 var_out;
+	Word32 L_produit;
+	
+	L_produit = (Word32)var1 * (Word32)var2;
+	
+	L_produit = (L_produit & (Word32) 0xffff8000) >> 15;
+	
+	if (L_produit & (Word32) 0x00010000)
+		L_produit = L_produit | (Word32) 0xffff0000;
+	
+	var_out = sature(L_produit, top);
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -1122,19 +1124,19 @@ Word16 mult(Word16 var1, Word16 var2)
 *	Purpose :
 *
 *		Same as mult with rounding, i.e.:
-*			mult_r(var1,var2) = shr(((var1*var2) + 16384),15) and
-*			mult_r(-32768,-32768) = 32767.
+*			mult_r(var1, var2) = shr(((var1*var2) + 16384), 15) and
+*			mult_r(-32768, - 32768) = 32767.
 *
 *	Complexity Weight : 2
 *
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -1144,29 +1146,29 @@ Word16 mult(Word16 var1, Word16 var2)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
-Word16 mult_r(Word16 var1, Word16 var2)
-  {
-   Word16 var_out;
-   Word32 L_produit_arr;
-
-   L_produit_arr = (Word32)var1 * (Word32)var2; /* product */
-   L_produit_arr += (Word32) 0x00004000;        /* round */
-   L_produit_arr &= (Word32) 0xffff8000;
-   L_produit_arr >>= 15;                        /* shift */
-
-   if (L_produit_arr & (Word32) 0x00010000)   /*sign extend when necessary*/
-     {
-      L_produit_arr |= (Word32) 0xffff0000;
-     }
-
-   var_out = sature(L_produit_arr);
-   return(var_out);
-  }
+Word16 mult_r(Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word16 var_out;
+	Word32 L_produit_arr;
+	
+	L_produit_arr = (Word32)var1 * (Word32)var2; /* product */
+	L_produit_arr +=(Word32) 0x00004000;        /* round */
+	L_produit_arr &=(Word32) 0xffff8000;
+	L_produit_arr >>= 15;                        /* shift */
+	
+	if (L_produit_arr & (Word32) 0x00010000)   /*sign extend when necessary*/
+	{
+		L_produit_arr |=(Word32) 0xffff0000;
+	}
+	
+	var_out = sature(L_produit_arr, top);
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -1175,14 +1177,14 @@ Word16 mult_r(Word16 var1, Word16 var2)
 *	Purpose :
 *
 *		Negate var1 with saturation, saturate in the case where input is -32768:
-*			negate(var1) = sub(0,var1).
+*			negate(var1) = sub(0, var1).
 *
 *	Complexity Weight : 1
 *
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -1192,18 +1194,18 @@ Word16 mult_r(Word16 var1, Word16 var2)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
 Word16 negate(Word16 var1)
-  {
-   Word16 var_out;
-
-   var_out = (var1 == MIN_16) ? MAX_16 : -var1;
-   return(var_out);
-  }
+{
+	Word16 var_out;
+	
+	var_out = (var1 == MIN_16) ? MAX_16 : -var1;
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -1216,14 +1218,14 @@ Word16 negate(Word16 var1)
 *		1073741824 and maximum of 2147483647, and for negative values on the
 *		interval with minimum of -2147483648 and maximum of -1073741824; in order
 *		to normalize the result, the following operation must be done :
-*			norm_L_var1 = L_shl(L_var1,norm_l(L_var1)).
+*			norm_L_var1 = L_shl(L_var1, norm_l(L_var1)).
 *
 *	Complexity Weight : 30
 *
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *	Outputs :
@@ -1233,41 +1235,41 @@ Word16 negate(Word16 var1)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0x0000 0000 <= var_out <= 0x0000 001f.
 *
 ************************************************************************/
 
 Word16 norm_l(Word32 L_var1)
-  {
-   Word16 var_out;
-
-   if (L_var1 == 0)
-     {
-      var_out = 0;
-     }
-   else
-     {
-      if (L_var1 == (Word32)0xffffffff)
- {
-  var_out = 31;
- }
-      else
- {
-  if (L_var1 < 0)
-    {
-     L_var1 = ~L_var1;
-    }
-
-  for(var_out = 0;L_var1 < (Word32)0x40000000;var_out++)
-    {
-     L_var1 <<= 1;
-    }
- }
-     }
-
-   return(var_out);
-  }
+{
+	Word16 var_out;
+	
+	if (L_var1 == 0)
+	{
+		var_out = 0;
+	}
+	else
+	{
+		if (L_var1 ==(Word32)0xffffffff)
+		{
+			var_out = 31;
+		}
+		else
+		{
+			if (L_var1 < 0)
+			{
+				L_var1 = ~L_var1;
+			}
+			
+			for (var_out = 0; L_var1 < (Word32)0x40000000; var_out++)
+			{
+				L_var1 <<= 1;
+			}
+		}
+	}
+	
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -1280,14 +1282,14 @@ Word16 norm_l(Word32 L_var1)
 *		maximum of 32767, and for negative values on the interval with minimum
 *		of -32768 and maximum of -16384; in order to normalize the result, the
 *		following operation must be done :
-*			norm_var1 = shl(var1,norm_s(var1)).
+*			norm_var1 = shl(var1, norm_s(var1)).
 *
 *	Complexity Weight : 15
 *
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -1297,41 +1299,41 @@ Word16 norm_l(Word32 L_var1)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0x0000 0000 <= var_out <= 0x0000 000f.
 *
 ************************************************************************/
 
 Word16 norm_s(Word16 var1)
-  {
-   Word16 var_out;
-
-   if (var1 == 0)
-     {
-      var_out = 0;
-     }
-   else
-     {
-      if (var1 == (Word16) 0xffff)
- {
-  var_out = 15;
- }
-      else
- {
-  if (var1 < 0)
-    {
-     var1 = ~var1;
-    }
-
-  for(var_out = 0; var1 < 0x4000; var_out++)
-    {
-     var1 <<= 1;
-    }
- }
-     }
-
-   return(var_out);
-  }
+{
+	Word16 var_out;
+	
+	if (var1 == 0)
+	{
+		var_out = 0;
+	}
+	else
+	{
+		if (var1 ==(Word16) 0xffff)
+		{
+			var_out = 15;
+		}
+		else
+		{
+			if (var1 < 0)
+			{
+				var1 = ~var1;
+			}
+			
+			for (var_out = 0; var1 < 0x4000; var_out++)
+			{
+				var1 <<= 1;
+			}
+		}
+	}
+	
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -1342,14 +1344,14 @@ Word16 norm_s(Word16 var1)
 *		Round the lower 16 bits of the 32 bit input number into its MS 16 bits
 *		with saturation. Shift the resulting bits right by 16 and return the 16
 *		bit number:
-*			round(L_var1) = extract_h(L_add(L_var1,32768))
+*			round(L_var1) = extract_h(L_add(L_var1, 32768))
 *
 *	Complexity Weight : 1
 *
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32 ) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *	Outputs :
@@ -1359,20 +1361,20 @@ Word16 norm_s(Word16 var1)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
-Word16 round(Word32 L_var1)
-  {
-   Word16 var_out;
-   Word32 L_arrondi;
-
-   L_arrondi = L_add(L_var1, (Word32)0x00008000);
-   var_out = extract_h(L_arrondi);
-   return(var_out);
-  }
+Word16 acelp_round(Word32 L_var1, tetra_op_t* top)
+{
+	Word16 var_out;
+	Word32 L_arrondi;
+	
+	L_arrondi = L_add(L_var1, (Word32)0x00008000, top);
+	var_out = extract_h(L_arrondi);
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -1385,7 +1387,7 @@ Word16 round(Word32 L_var1)
 *	Inputs :
 *
 *		L_var1
-*			32 bit long signed integer (Word32) whose value falls in the
+*			32 bit long signed integer(Word32) whose value falls in the
 *			range : 0x8000 0000 <= L_var1 <= 0x7fff ffff.
 *
 *	Outputs :
@@ -1395,33 +1397,33 @@ Word16 round(Word32 L_var1)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
-Word16 sature(Word32 L_var1)
-  {
-   Word16 var_out;
-
-   if (L_var1 > 0X00007fffL)
-     {
-      Overflow = 1;
-      var_out = MAX_16;
-     }
-   else if (L_var1 < (Word32)0xffff8000L)
-     {
-      Overflow = 1;
-      var_out = MIN_16;
-     }
-   else
-     {
-      Overflow = 0;
-      var_out = extract_l(L_var1);
-     }
-
-   return(var_out);
-  }
+Word16 sature(Word32 L_var1, tetra_op_t* top)
+{
+	Word16 var_out;
+	
+	if (L_var1 > 0X00007fffL)
+	{
+		top->Overflow = 1;
+		var_out = MAX_16;
+	}
+	else if (L_var1 <(Word32)0xffff8000L)
+	{
+		top->Overflow = 1;
+		var_out = MIN_16;
+	}
+	else
+	{
+		top->Overflow = 0;
+		var_out = extract_l(L_var1);
+	}
+	
+	return (var_out);
+}
 
 
 /************************************************************************
@@ -1440,11 +1442,11 @@ Word16 sature(Word32 L_var1)
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -1454,36 +1456,36 @@ Word16 sature(Word32 L_var1)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
-Word16 shl(Word16 var1,Word16 var2)
-  {
-   Word16 var_out;
-   Word32 resultat;
-
-   if (var2 < 0)
-     {
-      var_out = shr( var1,(Word16)(-var2) );
-     }
-   else
-     {
-      resultat = (Word32) var1 * ((Word32) 1 << var2);
-     if ((var2 > 15 && var1 != 0) || (resultat != (Word32)((Word16) resultat)))
+Word16 shl(Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word16 var_out;
+	Word32 resultat;
+	
+	if (var2 < 0)
+	{
+		var_out = shr(var1, (Word16)(-var2), top);
+	}
+	else
+	{
+		resultat = (Word32) var1 * ((Word32) 1 << var2);
+		if ((var2 > 15 && var1 != 0) || (resultat !=(Word32)((Word16) resultat)))
         {
-         Overflow = 1;
-         var_out = (var1 > 0) ? MAX_16 : MIN_16;
+			top->Overflow = 1;
+			var_out = (var1 > 0) ? MAX_16 : MIN_16;
         }
-      else
+		else
         {
-         var_out = extract_l(resultat);
+			var_out = extract_l(resultat);
         }
-     }
-
-   return(var_out);
-  }
+	}
+	
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -1501,11 +1503,11 @@ Word16 shl(Word16 var1,Word16 var2)
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -1515,40 +1517,40 @@ Word16 shl(Word16 var1,Word16 var2)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
-Word16 shr(Word16 var1,Word16 var2)
-  {
-   Word16 var_out;
-
-   if (var2 < 0)
-     {
-      var_out = shl( var1,(Word16)(-var2) );
-     }
-   else
-     {
-      if (var2 >= 15)
+Word16 shr(Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word16 var_out;
+	
+	if (var2 < 0)
+	{
+		var_out = shl(var1, (Word16)(-var2), top);
+	}
+	else
+	{
+		if (var2 >= 15)
         {
-         var_out = (var1 < 0) ? -1 : 0;
+			var_out = (var1 < 0) ? -1 : 0;
         }
-      else
+		else
         {
-         if (var1 < 0)
-           {
-     var_out = ~(( ~var1) >> var2 );
-           }
-         else
-           {
-            var_out = var1 >> var2;
-           }
+			if (var1 < 0)
+			{
+				var_out = ~((~var1) >> var2);
+			}
+			else
+			{
+				var_out = var1 >> var2;
+			}
         }
-     }
-
-   return(var_out);
-  }
+	}
+	
+	return (var_out);
+}
 
 /************************************************************************
 *
@@ -1556,7 +1558,7 @@ Word16 shr(Word16 var1,Word16 var2)
 *
 *	Purpose :
 *
-*			Performs the subtraction (var1+var2) with overflow control and satu-
+*			Performs the subtraction(var1 + var2) with overflow control and satu-
 *			ration; the 16 bit result is set at +32767 when overflow occurs or at
 *			-32768 when underflow occurs.
 *
@@ -1565,11 +1567,11 @@ Word16 shr(Word16 var1,Word16 var2)
 *	Inputs :
 *
 *		var1
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var1 <= 0x0000 7fff.
 *
 *		var2
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var2 <= 0x0000 7fff.
 *
 *	Outputs :
@@ -1579,17 +1581,17 @@ Word16 shr(Word16 var1,Word16 var2)
 *	Returned Value :
 *
 *		var_out
-*			16 bit short signed integer (Word16) whose value falls in the
+*			16 bit short signed integer(Word16) whose value falls in the
 *			range : 0xffff 8000 <= var_out <= 0x0000 7fff.
 *
 ************************************************************************/
 
-Word16 sub(Word16 var1,Word16 var2)
-  {
-   Word16 var_out;
-   Word32 L_diff;
-
-   L_diff = (Word32) var1 - var2;
-   var_out = sature(L_diff);
-   return(var_out);
-  }
+Word16 sub(Word16 var1, Word16 var2, tetra_op_t* top)
+{
+	Word16 var_out;
+	Word32 L_diff;
+	
+	L_diff = (Word32) var1 - var2;
+	var_out = sature(L_diff, top);
+	return (var_out);
+}

@@ -21,7 +21,7 @@
 #define _GST_ACELPENC_H_
 
 #include <gst/audio/gstaudioencoder.h>
-#include "structs.h"
+#include "c_source.h"
 
 G_BEGIN_DECLS
 
@@ -38,7 +38,7 @@ struct _GstAcelpenc
 {
   GstAudioEncoder base_acelpenc;
   int samples_per_block;
-  CoderData coderData;
+  tetra_op_t coderData;
 };
 
 struct _GstAcelpencClass

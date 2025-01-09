@@ -106,7 +106,7 @@ Word16	Untransform_Class_0(Word16 FS_Flag, Word16 Input_Frame[]);
 
 
 extern Flag Overflow;
-extern Flag Carry;
+// extern Flag Carry;
 
 #define MAX_32 (Word32)0x7fffffff
 #define MIN_32 (Word32)0x80000000
