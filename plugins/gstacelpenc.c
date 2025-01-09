@@ -42,7 +42,7 @@
 #include "c_structs.h"
 
 #define L_frame     240
-#define serial_size 138
+#define serial_size 137
 #define ana_size     23
 
 GST_DEBUG_CATEGORY_STATIC (gst_acelpenc_debug_category);
@@ -136,23 +136,10 @@ gst_acelpenc_class_init (GstAcelpencClass *klass)
 
   gobject_class->set_property = gst_acelpenc_set_property;
   gobject_class->get_property = gst_acelpenc_get_property;
-  //gobject_class->dispose = gst_acelpenc_dispose;
-  //gobject_class->finalize = gst_acelpenc_finalize;
   audio_encoder_class->start = GST_DEBUG_FUNCPTR (gst_acelpenc_start);
   audio_encoder_class->stop = GST_DEBUG_FUNCPTR (gst_acelpenc_stop);
   audio_encoder_class->set_format = GST_DEBUG_FUNCPTR (gst_acelpenc_set_format);
   audio_encoder_class->handle_frame = GST_DEBUG_FUNCPTR (gst_acelpenc_handle_frame);
-  //audio_encoder_class->flush = GST_DEBUG_FUNCPTR (gst_acelpenc_flush);
-  //audio_encoder_class->pre_push = GST_DEBUG_FUNCPTR (gst_acelpenc_pre_push);
-  //audio_encoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_acelpenc_sink_event);
-  //audio_encoder_class->src_event = GST_DEBUG_FUNCPTR (gst_acelpenc_src_event);
-  //audio_encoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_acelpenc_getcaps);
-  //audio_encoder_class->open = GST_DEBUG_FUNCPTR (gst_acelpenc_open);
-  //audio_encoder_class->close = GST_DEBUG_FUNCPTR (gst_acelpenc_close);
-  //audio_encoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_acelpenc_negotiate);
-  //audio_encoder_class->decide_allocation = GST_DEBUG_FUNCPTR (gst_acelpenc_decide_allocation);
-  //audio_encoder_class->propose_allocation = GST_DEBUG_FUNCPTR (gst_acelpenc_propose_allocation);
-
 }
 
 static void
@@ -194,29 +181,6 @@ gst_acelpenc_get_property (GObject *object, guint property_id,
   }
 }
 
-void
-gst_acelpenc_dispose (GObject *object)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (object);
-
-  GST_DEBUG_OBJECT (acelpenc, "dispose");
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (gst_acelpenc_parent_class)->dispose (object);
-}
-
-void
-gst_acelpenc_finalize (GObject *object)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (object);
-
-  GST_DEBUG_OBJECT (acelpenc, "finalize");
-
-  /* clean up object here */
-
-  G_OBJECT_CLASS (gst_acelpenc_parent_class)->finalize (object);
-}
 
 static gboolean
 gst_acelpenc_start (GstAudioEncoder *encoder)
@@ -283,15 +247,15 @@ acelpenc_encode_block (GstAcelpenc * enc, const gint16 * samples, int blocksize)
   outbuf = gst_buffer_new_and_alloc (blocksize);
   gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
 
-  memcpy(enc->coderData.new_speech, samples, L_frame);        // copy input audio into codec
+  memcpy(enc->coderData.new_speech, samples, L_frame*2);        // copy input audio into codec
 
   Pre_Process(enc->coderData.new_speech, (Word16)L_frame, &enc->coderData);	    // Pre processing of input speech 
 
-  Coder_Tetra(ana, syn, &enc->coderData);       // Find speech parameters         
+  Coder_Tetra(ana, syn, &enc->coderData);                         // Find speech parameters         
 
-  Post_Process(syn, (Word16)L_frame, &enc->coderData);           // Post processing of synthesis   
+  Post_Process(syn, (Word16)L_frame, &enc->coderData);            // Post processing of synthesis   
 
-  Prm2bits_Tetra_8(ana, omap.data, &enc->coderData);                  // Parameters to serial bits      
+  Prm2bits_Tetra_8(ana, omap.data, &enc->coderData);              // Parameters to serial bits      
 
   gst_buffer_unmap (outbuf, &omap);
 
@@ -331,118 +295,16 @@ gst_acelpenc_handle_frame(GstAudioEncoder *encoder, GstBuffer *buffer)
   }
 
   samples = (gint16 *) map.data;
-  GST_DEBUG_OBJECT (acelpenc, "zipfi");
-  // do tha shizzle
-  outbuf = acelpenc_encode_block (acelpenc, samples, 137);//acelpenc->blocksize);
+  outbuf = acelpenc_encode_block (acelpenc, samples, serial_size);
     
   gst_buffer_unmap (buffer, &map);
 
-  GST_DEBUG_OBJECT (acelpenc, "foo");
   ret = gst_audio_encoder_finish_frame (encoder, outbuf, acelpenc->samples_per_block);
-  GST_DEBUG_OBJECT (acelpenc, "foodle %d", ret);
 
 done:
   return ret;
 }
 
-static void
-gst_acelpenc_flush (GstAudioEncoder *encoder)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
-
-  GST_DEBUG_OBJECT (acelpenc, "flush");
-
-}
-
-static GstFlowReturn
-gst_acelpenc_pre_push (GstAudioEncoder *encoder, GstBuffer **buffer)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
-
-  GST_DEBUG_OBJECT (acelpenc, "pre_push");
-
-  return GST_FLOW_OK;
-}
-
-static gboolean
-gst_acelpenc_sink_event (GstAudioEncoder *encoder, GstEvent *event)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
-
-  GST_DEBUG_OBJECT (acelpenc, "sink_event");
-
-  return TRUE;
-}
-
-static gboolean
-gst_acelpenc_src_event (GstAudioEncoder *encoder, GstEvent *event)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
-
-  GST_DEBUG_OBJECT (acelpenc, "src_event");
-
-  return TRUE;
-}
-
-static GstCaps *
-gst_acelpenc_getcaps (GstAudioEncoder *encoder, GstCaps *filter)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
-
-  GST_DEBUG_OBJECT (acelpenc, "getcaps");
-
-  return NULL;
-}
-
-static gboolean
-gst_acelpenc_open (GstAudioEncoder *encoder)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
-
-  GST_DEBUG_OBJECT (acelpenc, "open");
-
-  return TRUE;
-}
-
-static gboolean
-gst_acelpenc_close (GstAudioEncoder *encoder)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
-
-  GST_DEBUG_OBJECT (acelpenc, "close");
-
-  return TRUE;
-}
-
-static gboolean
-gst_acelpenc_negotiate (GstAudioEncoder *encoder)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
-
-  GST_DEBUG_OBJECT (acelpenc, "negotiate");
-
-  return TRUE;
-}
-
-static gboolean
-gst_acelpenc_decide_allocation (GstAudioEncoder *encoder, GstQuery *query)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
-
-  GST_DEBUG_OBJECT (acelpenc, "decide_allocation");
-
-  return TRUE;
-}
-
-static gboolean
-gst_acelpenc_propose_allocation (GstAudioEncoder *encoder, GstQuery *query)
-{
-  GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
-
-  GST_DEBUG_OBJECT (acelpenc, "propose_allocation");
-
-  return TRUE;
-}
 
 static gboolean
 plugin_init (GstPlugin *plugin)

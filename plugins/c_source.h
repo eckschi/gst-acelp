@@ -90,8 +90,7 @@ Word16 Pitch_Fr(Word16 exc[], Word16 xn[], Word16 h[], Word16 L_subfr,
 Word16 Pitch_Ol_Dec(Word16 signal[], Word16 L_frame, tetra_op_t* top);
 void   Pred_Lt(Word16 exc[], Word16 T0, Word16 frac, Word16 L_subfr, tetra_op_t* top);
 void   Pre_Process(Word16 signal[], Word16 lg, tetra_op_t* top);
-void   Prm2bits_Tetra(Word16 prm[], Word16 bits[], tetra_op_t* top);
-void   Prm2bits_Tetra_8(Word16 prm[], unsigned char bits[], tetra_op_t* top); // bigfoot
+void   Prm2bits_Tetra_8(Word16 prm[], unsigned char bits[], tetra_op_t* top); 
 
 /* Specific decoder functions */
 

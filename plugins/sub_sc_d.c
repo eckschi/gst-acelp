@@ -2653,28 +2653,6 @@ void Pre_Process(Word16 signal[], Word16 lg, tetra_op_t* top)
 
 #define PRM_NO    23
 
-void Prm2bits_Tetra(Word16 prm[], Word16 bits[], tetra_op_t* top)
-{
-	Word16 i;
-	static const Word16 bitno[PRM_NO] = 
-	{
-		8, 9, 9,            /* split VQ LSP  */
-		8, 14, 1, 1, 6,     /* subframe 1    */
-		5, 14, 1, 1, 6,     /* subframe 2    */
-		5, 14, 1, 1, 6,     /* subframe 3    */
-		5, 14, 1, 1, 6
-	};    /* subframe 4    */
-	
-	*bits++ = 0;	/* bit[0] = 0, at receiver this bits indicate BFI */
-	
-	for (i = 0; i < PRM_NO; i++)
-	{
-		int2bin(prm[i], bitno[i], bits, top);
-		bits += bitno[i];
-	}
-	return;
-}
-
 // bigfoots own implementation of that function returning unsigned char instead of word
 void  Prm2bits_Tetra_8(Word16 prm[], unsigned char bits[], tetra_op_t* top)
 {
@@ -2688,7 +2666,8 @@ void  Prm2bits_Tetra_8(Word16 prm[], unsigned char bits[], tetra_op_t* top)
 		5, 14, 1, 1, 6		/* subframe 4    */ 
 	};    
 	
-	*bits++ = 0;	/* bit[0] = 0, at receiver this bits indicate BFI */
+	// WE DONOT add BAD FRAME Indicator here, as it's transported apart from the parameters
+	//*bits++ = 0;	/* bit[0] = 0, at receiver this bits indicate BFI */
 	
 	for (i = 0; i < PRM_NO; i++)
 	{

@@ -1,4 +1,4 @@
-README for your project.
+TETRA ACELP Encoder Plugin
 
 NOTE:
 plugins can be installed locally by using "$HOME" as prefix:
@@ -8,3 +8,7 @@ plugins can be installed locally by using "$HOME" as prefix:
 
 However be advised that the automatic scan of plugins in the user home
 directory won't work under gst-build devenv.
+
+example launch
+
+gst-launch-1.0 -v filesrc location=/tmp/fight_m.mp3 ! decodebin ! audioconvert ! audioresample ! acelpenc ! filesink location=/tmp/foo.celp
