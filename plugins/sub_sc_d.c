@@ -429,10 +429,8 @@ void Clsp_334(Word16 *lsp, Word16 *lsp_q, Word16 *indice)
 *
 **************************************************************************/
 
-  extern Word16 last_ener_pit;
-  extern Word16 last_ener_cod;
 
-Word16 Dec_Ener(Word16 index, Word16 bfi, Word16 A[], Word16 prd_lt[],
+Word16 Dec_Ener(CoderData *cd, Word16 index, Word16 bfi, Word16 A[], Word16 prd_lt[],
           Word16 code[], Word16 L_subfr, Word16 *gain_pit, Word16 *gain_cod)
 {
 
@@ -525,11 +523,11 @@ Word16 Dec_Ener(Word16 index, Word16 bfi, Word16 A[], Word16 prd_lt[],
 
    if(bfi != 0)
    {
-     last_ener_pit = sub(last_ener_pit, (Word16)128);	/* -0.5 in Q8 */
-     if(last_ener_pit < 0) last_ener_pit = 0;
+     cd->last_ener_pit = sub(cd->last_ener_pit, (Word16)128);	/* -0.5 in Q8 */
+     if(cd->last_ener_pit < 0) cd->last_ener_pit = 0;
 
-     last_ener_cod = sub(last_ener_cod, (Word16)128);	/* -0.5 in Q8 */
-     if(last_ener_cod < 0) last_ener_cod = 0;
+     cd->last_ener_cod = sub(cd->last_ener_cod, (Word16)128);	/* -0.5 in Q8 */
+     if(cd->last_ener_cod < 0) cd->last_ener_cod = 0;
    }
    else
    {
@@ -540,8 +538,8 @@ Word16 Dec_Ener(Word16 index, Word16 bfi, Word16 A[], Word16 prd_lt[],
       *  if(pred_pit < 0.0) pred_pit = 0.0;                             *
       *-----------------------------------------------------------------*/
 
-     L_tmp = Load_sh(last_ener_pit, (Word16)8);	/* .5 last_ener_pit in Q9  */
-     L_tmp = add_sh(L_tmp,last_ener_cod, (Word16)7); /*+.25 last_ener_code 
+     L_tmp = Load_sh(cd->last_ener_pit, (Word16)8);	/* .5 last_ener_pit in Q9  */
+     L_tmp = add_sh(L_tmp,cd->last_ener_cod, (Word16)7); /*+.25 last_ener_code 
 											in Q9    */
      L_tmp = sub_sh(L_tmp, (Word16)768, (Word16)9); /* -3.0 in Q9          */
      if(L_tmp < 0) L_tmp = 0;
@@ -553,8 +551,8 @@ Word16 Dec_Ener(Word16 index, Word16 bfi, Word16 A[], Word16 prd_lt[],
       *  if(pred_cod < 0.0) pred_cod = 0.0;                             *
       *-----------------------------------------------------------------*/
 
-     L_tmp = Load_sh(last_ener_cod, (Word16)8);	/* .5 last_ener_cod in Q9  */
-     L_tmp = add_sh(L_tmp, last_ener_pit, (Word16)7); /*+.25 last_ener_pit 
+     L_tmp = Load_sh(cd->last_ener_cod, (Word16)8);	/* .5 last_ener_cod in Q9  */
+     L_tmp = add_sh(L_tmp, cd->last_ener_pit, (Word16)7); /*+.25 last_ener_pit 
 											in Q9    */
      L_tmp = sub_sh(L_tmp, (Word16)768, (Word16)9); /* -3.0 in Q9          */
      if(L_tmp < 0) L_tmp = 0;
@@ -565,14 +563,14 @@ Word16 Dec_Ener(Word16 index, Word16 bfi, Word16 A[], Word16 prd_lt[],
       *-----------------------------------------------------------------*/
 
      j = shl(index, (Word16)1);
-     last_ener_pit = add(t_qua_ener[j],   pred_pit);
-     last_ener_cod = add(t_qua_ener[j+1], pred_cod);
+     cd->last_ener_pit = add(t_qua_ener[j],   pred_pit);
+     cd->last_ener_cod = add(t_qua_ener[j+1], pred_cod);
 
      /* Limit energies ->for transmission errors */
 
-     if(sub(last_ener_pit, (Word16)6912)>0)last_ener_pit = 6912; 
+     if(sub(cd->last_ener_pit, (Word16)6912)>0)cd->last_ener_pit = 6912; 
 									/* 6912 = 27 in Q8 */
-     if(sub(last_ener_cod, (Word16)6400)>0)last_ener_cod = 6400; 
+     if(sub(cd->last_ener_cod, (Word16)6400)>0)cd->last_ener_cod = 6400; 
 									/* 6400 = 25 in Q8 */
   }
 
@@ -588,7 +586,7 @@ Word16 Dec_Ener(Word16 index, Word16 bfi, Word16 A[], Word16 prd_lt[],
    *                                                   *
    *---------------------------------------------------*/
 
-  L_tmp = Load_sh(last_ener_pit, (Word16)6);	 /* last_ener_pit/2 in Q15 */
+  L_tmp = Load_sh(cd->last_ener_pit, (Word16)6);	 /* last_ener_pit/2 in Q15 */
   L_tmp = sub_sh(L_tmp, ener_plt, (Word16)6);	 /* - ener_plt/2    in Q15 */
   L_tmp = add_sh(L_tmp, (Word16)12, (Word16)15); /* to have gain in Q12    */
   L_extract(L_tmp, &exp, &frac);
@@ -605,7 +603,7 @@ Word16 Dec_Ener(Word16 index, Word16 bfi, Word16 A[], Word16 prd_lt[],
    *                                                   *
    *---------------------------------------------------*/
 
-  L_tmp = Load_sh(last_ener_cod, (Word16)6);	/* last_ener_cod/2 in Q15 */
+  L_tmp = Load_sh(cd->last_ener_cod, (Word16)6);	/* last_ener_cod/2 in Q15 */
   L_tmp = sub_sh(L_tmp, ener_c, (Word16)6);	/* - ener_c/2      in Q15 */
   L_extract(L_tmp, &exp, &frac);
   L_tmp = pow2(exp, frac);
@@ -1262,10 +1260,7 @@ void D_Lsp334(Word16 indice[], Word16 lsp[], Word16 lsp_old[])
 *
 **************************************************************************/
 
-  extern Word16 last_ener_pit;
-  extern Word16 last_ener_cod;
-
-Word16 Ener_Qua(Word16 A[], Word16 prd_lt[], Word16 code[], Word16 L_subfr,
+Word16 Ener_Qua(CoderData *cd, Word16 A[], Word16 prd_lt[], Word16 code[], Word16 L_subfr,
                 Word16 *gain_pit, Word16 *gain_cod)
 {
 
@@ -1397,8 +1392,8 @@ Word16 Ener_Qua(Word16 A[], Word16 prd_lt[], Word16 code[], Word16 L_subfr,
    *  err_pit = ener_pit - pred_pit;                                 *
    *-----------------------------------------------------------------*/
 
-  L_tmp = Load_sh(last_ener_pit, (Word16)8); /* .5 last_ener_pit in Q9     */
-  L_tmp = add_sh(L_tmp, last_ener_cod, (Word16)7); /*+.25 last_ener_code 
+  L_tmp = Load_sh(cd->last_ener_pit, (Word16)8); /* .5 last_ener_pit in Q9     */
+  L_tmp = add_sh(L_tmp, cd->last_ener_cod, (Word16)7); /*+.25 last_ener_code 
 											in Q9    */
   L_tmp = sub_sh(L_tmp, (Word16)768, (Word16)9); /* -3.0 in Q9             */
   if(L_tmp < 0) L_tmp = 0;
@@ -1413,8 +1408,8 @@ Word16 Ener_Qua(Word16 A[], Word16 prd_lt[], Word16 code[], Word16 L_subfr,
    *  err_cod = ener_cod - pred_cod;                                 *
    *-----------------------------------------------------------------*/
 
-  L_tmp = Load_sh(last_ener_cod, (Word16)8); /* .5 last_ener_cod  in Q9    */
-  L_tmp = add_sh(L_tmp, last_ener_pit, (Word16)7); /*+.25 last_ener_pit
+  L_tmp = Load_sh(cd->last_ener_cod, (Word16)8); /* .5 last_ener_cod  in Q9    */
+  L_tmp = add_sh(L_tmp, cd->last_ener_pit, (Word16)7); /*+.25 last_ener_pit
 											in Q9    */
   L_tmp = sub_sh(L_tmp, (Word16)768, (Word16)9); /* -3.0 in Q9             */
   if(L_tmp < 0) L_tmp = 0;
@@ -1446,14 +1441,14 @@ Word16 Ener_Qua(Word16 A[], Word16 prd_lt[], Word16 code[], Word16 L_subfr,
   }
 
   j = shl(index, (Word16)1);
-  last_ener_pit = add(t_qua_ener[j],   pred_pit);
-  last_ener_cod = add(t_qua_ener[j+1], pred_cod);
+  cd->last_ener_pit = add(t_qua_ener[j],   pred_pit);
+  cd->last_ener_cod = add(t_qua_ener[j+1], pred_cod);
 
   /* Limit energies ->for transmission errors */
 
-  if(sub(last_ener_pit, (Word16)6912) > 0) last_ener_pit = 6912;
+  if(sub(cd->last_ener_pit, (Word16)6912) > 0) cd->last_ener_pit = 6912;
 									/* 6912 = 27 in Q8 */
-  if(sub(last_ener_cod, (Word16)6400) > 0) last_ener_cod = 6400;
+  if(sub(cd->last_ener_cod, (Word16)6400) > 0) cd->last_ener_cod = 6400;
 									/* 6400 = 25 in Q8 */
 
   /*---------------------------------------------------*
@@ -1467,7 +1462,7 @@ Word16 Ener_Qua(Word16 A[], Word16 prd_lt[], Word16 code[], Word16 L_subfr,
    *                                                   *
    *---------------------------------------------------*/
 
-  L_tmp = Load_sh(last_ener_pit, (Word16)6);	/* last_ener_pit/2 in Q15 */
+  L_tmp = Load_sh(cd->last_ener_pit, (Word16)6);	/* last_ener_pit/2 in Q15 */
   L_tmp = sub_sh(L_tmp, ener_plt, (Word16)6);	/* - ener_plt/2    in Q15 */
   L_tmp = add_sh(L_tmp, (Word16)12, (Word16)15); /* to have gain in Q12   */
   L_extract(L_tmp, &exp, &frac);
@@ -1485,7 +1480,7 @@ Word16 Ener_Qua(Word16 A[], Word16 prd_lt[], Word16 code[], Word16 L_subfr,
    *                                                   *
    *---------------------------------------------------*/
 
-  L_tmp = Load_sh(last_ener_cod, (Word16)6);	/* last_ener_cod/2 in Q15 */
+  L_tmp = Load_sh(cd->last_ener_cod, (Word16)6);	/* last_ener_cod/2 in Q15 */
   L_tmp = sub_sh(L_tmp, ener_c, (Word16)6);	/* - ener_c/2      in Q15 */
   L_extract(L_tmp, &exp, &frac);
   L_tmp = pow2(exp, frac);
@@ -2487,37 +2482,37 @@ void Pred_Lt(Word16 exc[], Word16 T0, Word16 frac, Word16 L_subfr)
 
 /* Static values to be preserved between calls */
 
-static Word16 y_hi, y_lo, x0;
+#include "structs.h"
 
 /* Initialization of static values */
 
-void Init_Pre_Process(void)
+void Init_Pre_Process(CoderData *cd)
 {
-  y_hi = 0;
-  y_lo = 0;
-  x0   = 0;
+  cd->y_hi = 0;
+  cd->y_lo = 0;
+  cd->x0   = 0;
 }
 
 
 /* Offset compensation and divide by 2 */
 
-void Pre_Process(Word16 signal[], Word16 lg)
+void Pre_Process(CoderData *cd, Word16 signal[], Word16 lg)
 {
   Word16 i, x1;
   Word32 L_tmp;
 
   for(i=0; i<lg; i++)
   {
-     x1 = x0;
-     x0 = signal[i];
+     x1 = cd->x0;
+     cd->x0 = signal[i];
 
-     L_tmp     = Load_sh(x0, (Word16)15);
+     L_tmp     = Load_sh(cd->x0, (Word16)15);
      L_tmp     = sub_sh(L_tmp, x1, (Word16)15);
-     L_tmp     = L_mac(L_tmp, y_hi, (Word16)32735);
-     L_tmp     = add_sh(L_tmp, mult(y_lo, (Word16)32735), (Word16)1);
+     L_tmp     = L_mac(L_tmp, cd->y_hi, (Word16)32735);
+     L_tmp     = add_sh(L_tmp, mult(cd->y_lo, (Word16)32735), (Word16)1);
      signal[i] = extract_h(L_tmp);
-     y_hi      = extract_h(L_tmp);
-     y_lo      = extract_l(sub_sh(L_shr( L_tmp,(Word16)1 ), y_hi, (Word16)15));
+     cd->y_hi      = extract_h(L_tmp);
+     cd->y_lo      = extract_l(sub_sh(L_shr( L_tmp,(Word16)1 ), cd->y_hi, (Word16)15));
   }
   return;
 }
@@ -2563,24 +2558,66 @@ void Pre_Process(Word16 signal[], Word16 lg)
 *
 **************************************************************************/
 
+// bigfoots own implementation of that function returning unsigned char instead of word
+#define BIT_0     0
+#define BIT_1     1
+#define MASK      1
+void int2bin_8(int16_t value, unsigned int no_of_bits, unsigned char *bitstream)
+{
+	int16_t bit;
+	unsigned int i;
+	unsigned char *pt_bitstream;
+
+	pt_bitstream = bitstream + no_of_bits;
+	
+	for (i = 0; i < no_of_bits; i++)
+	{
+		bit = value & MASK;
+		if (bit == 0)
+			*--pt_bitstream = BIT_0;
+		else
+			*--pt_bitstream = BIT_1;
+
+		value >>= 1;
+	}
+}
+
+
 #define PRM_NO    23
 
-void Prm2bits_Tetra(Word16 prm[], Word16 bits[])
+void Prm2bits_Tetra(Word16 prm[], uint8_t bits[])
 {
-  Word16 i;
-  static Word16 bitno[PRM_NO] = {8, 9, 9,            /* split VQ LSP  */
-                                 8, 14, 1, 1, 6,     /* subframe 1    */
-                                 5, 14, 1, 1, 6,     /* subframe 2    */
-                                 5, 14, 1, 1, 6,     /* subframe 3    */
-                                 5, 14, 1, 1, 6};    /* subframe 4    */
+  // Word16 i;
+  // static Word16 bitno[PRM_NO] = {8, 9, 9,            /* split VQ LSP  */
+  //                                8, 14, 1, 1, 6,     /* subframe 1    */
+  //                                5, 14, 1, 1, 6,     /* subframe 2    */
+  //                                5, 14, 1, 1, 6,     /* subframe 3    */
+  //                                5, 14, 1, 1, 6};    /* subframe 4    */
 
-  *bits++ = 0;	/* bit[0] = 0, at receiver this bits indicate BFI */
+  // *bits++ = 0;	/* bit[0] = 0, at receiver this bits indicate BFI */
 
-  for (i = 0; i < PRM_NO; i++)
-  {
-    int2bin(prm[i], bitno[i], bits);
-    bits += bitno[i];
-  }
-  return;
+  // for (i = 0; i < PRM_NO; i++)
+  // {
+  //   int2bin(prm[i], bitno[i], bits);
+  //   bits += bitno[i];
+  // }
+  // return;
+
+
+	static const unsigned int bitno[PRM_NO] = // totals 137
+	{
+		8, 9, 9,            /* split VQ LSP  */
+		8, 14, 1, 1, 6,     /* subframe 1    */
+		5, 14, 1, 1, 6,     /* subframe 2    */
+		5, 14, 1, 1, 6,     /* subframe 3    */
+		5, 14, 1, 1, 6		/* subframe 4    */ 
+	};    
+	
+	for (int i = 0; i < PRM_NO; i++)
+	{
+		int2bin_8(prm[i], bitno[i], bits);
+		bits += bitno[i];
+	}
+	return;
 }
 

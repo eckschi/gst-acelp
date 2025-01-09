@@ -62,59 +62,11 @@
 
         /* Speech vector */
 
-static Word16 old_speech[L_total];
-static Word16 *speech, *p_window;
-Word16 *new_speech;                    /* Global variable */
-
-        /* Weighted speech vector */
-
-static Word16 old_wsp[L_frame+pit_max];
-static Word16 *wsp;
-
-        /* Excitation vector */
-
-static Word16 old_exc[L_frame+pit_max+L_inter];
-static Word16 *exc;
-
-        /* All-zero vector */
-
-static Word16 ai_zero[L_subfr+pp1];
-static Word16 *zero;
-
-        /* Spectral expansion factors */
-
-static Word16 F_gamma1[p];
-static Word16 F_gamma2[p];
-static Word16 F_gamma3[p];
-static Word16 F_gamma4[p];
-
-        /* Lsp (Line Spectral Pairs in the cosine domain) */
-
-static Word16 lspold[p]={
-              30000, 26000, 21000, 15000, 8000, 0,
-		  -8000,-15000,-21000,-26000};
-static Word16 lspnew[p];
-static Word16 lspnew_q[p], lspold_q[p];
-
-	  /* Initial lsp values used after each time */
-        /* a reset is executed */
 
 static Word16 lspold_init[p]={
               30000, 26000, 21000, 15000, 8000, 0,
 		  -8000,-15000,-21000,-26000};
 
-        /* Filters memories */
-
-static Word16 mem_syn[p], mem_w0[p], mem_w[p];
-
-        /* Matrix rr[dim_rr][dim_rr] */
-
-static Word16 rr[dim_rr][dim_rr];
- 
-       /* Global definition */
-
-Word16 last_ener_cod;
-Word16 last_ener_pit;
 
 
 /**************************************************************************
@@ -135,7 +87,7 @@ Word16 last_ener_pit;
 *
 **************************************************************************/
 
-void Init_Coder_Tetra(void)
+void Init_Coder_Tetra(CoderData *cd)
 {
   Word16 i,j;
 
@@ -156,52 +108,52 @@ void Init_Coder_Tetra(void)
  *                             new_speech                                *
  *-----------------------------------------------------------------------*/
 
-  new_speech = old_speech + L_total - L_frame;	/* New speech     */
-  speech     = new_speech - L_next;			/* Present frame  */
-  p_window   = old_speech + L_total - L_window;	/* For LPC window */
+  cd->new_speech = cd->old_speech + L_total - L_frame;	/* New speech     */
+  cd->speech     = cd->new_speech - L_next;			/* Present frame  */
+  cd->p_window   = cd->old_speech + L_total - L_window;	/* For LPC window */
 
   /* Initialize global variables */
 
-  last_ener_cod = 0;
-  last_ener_pit = 0;
+  cd->last_ener_cod = 0;
+  cd->last_ener_pit = 0;
   
   /* Initialize static pointers */
 
-  wsp    = old_wsp + pit_max;
-  exc    = old_exc + pit_max + L_inter;
-  zero   = ai_zero + pp1;
+  cd->wsp    = cd->old_wsp + pit_max;
+  cd->exc    = cd->old_exc + pit_max + L_inter;
+  cd->zero   = cd->ai_zero + pp1;
 
 
   /* Static vectors to zero */
 
   for(i=0; i<L_total; i++)
-    old_speech[i] = 0;
+    cd->old_speech[i] = 0;
 
   for(i=0; i<pit_max + L_inter; i++)
-    old_exc[i] = old_wsp[i] = 0;
+    cd->old_exc[i] = cd->old_wsp[i] = 0;
 
   for(i=0; i<p; i++)
-    mem_syn[i] = mem_w[i] = mem_w0[i] = 0;
+    cd->mem_syn[i] = cd->mem_w[i] = cd->mem_w0[i] = 0;
 
   for(i=0; i<L_subfr; i++)
-    zero[i] = 0;
+    cd->zero[i] = 0;
 
   for(i=0; i< dim_rr; i++)
     for(j=0; j< dim_rr; j++)
-    rr[i][j] = 0;
+    cd->rr[i][j] = 0;
 
   /* Initialisation of lsp values for first */
   /* frame lsp interpolation */
 
   for(i=0; i<p; i++)
-    lspold_q[i] = lspold[i] = lspold_init[i];
+    cd->lspold_q[i] = cd->lspold[i] = lspold_init[i];
 
   /* Compute LPC spectral expansion factors */
 
-  Fac_Pond(gamma1, F_gamma1);
-  Fac_Pond(gamma2, F_gamma2);
-  Fac_Pond(gamma3, F_gamma3);
-  Fac_Pond(gamma4, F_gamma4);
+  Fac_Pond(gamma1, cd->F_gamma1);
+  Fac_Pond(gamma2, cd->F_gamma2);
+  Fac_Pond(gamma3, cd->F_gamma3);
+  Fac_Pond(gamma4, cd->F_gamma4);
 
  return;
 }
@@ -237,7 +189,7 @@ void Init_Coder_Tetra(void)
 *
 **************************************************************************/
 
-void Coder_Tetra(Word16 ana[], Word16 synth[])
+void Coder_Tetra(CoderData *cd, Word16 ana[], Word16 synth[])
 {
 
   /* LPC coefficients */
@@ -292,29 +244,29 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
  *         subframes (both quantized and unquantized)                     *
  *------------------------------------------------------------------------*/
 
-  Autocorr(p_window, p, r_h, r_l);		/* Autocorrelations */
+  Autocorr(cd->p_window, p, r_h, r_l);		/* Autocorrelations */
 
   Lag_Window(p, r_h, r_l);			/* Lag windowing    */
 
   Levin_32(r_h, r_l, A_t);			/* Levinson-Durbin  */
 
-  Az_Lsp(A_t, lspnew, lspold);		/* From A(z) to lsp */
+  Az_Lsp(A_t, cd->lspnew, cd->lspold);		/* From A(z) to lsp */
 
-  Clsp_334(lspnew, lspnew_q, ana);		/* Lsp quantization */
+  Clsp_334(cd->lspnew, cd->lspnew_q, ana);		/* Lsp quantization */
 
   ana += 3;				/* Increment analysis parameters pointer */
 
   /* Interpolation of LPC for the 4 subframes */
 
-  Int_Lpc4(lspold,   lspnew,   A_t);
-  Int_Lpc4(lspold_q, lspnew_q, Aq_t);
+  Int_Lpc4(cd->lspold,   cd->lspnew,   A_t);
+  Int_Lpc4(cd->lspold_q, cd->lspnew_q, Aq_t);
 
   /* update the LSPs for the next frame */
 
   for(i=0; i<p; i++)
   {
-    lspold[i]   = lspnew[i];
-    lspold_q[i] = lspnew_q[i];
+    cd->lspold[i]   = cd->lspnew[i];
+    cd->lspold_q[i] = cd->lspnew_q[i];
   }
 
 
@@ -327,16 +279,16 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
   A = A_t;
   for (i = 0; i < L_frame; i += L_subfr)
   {
-    Pond_Ai(A, F_gamma1, Ap1);
-    Pond_Ai(A, F_gamma2, Ap2);
-    Residu(Ap1, &speech[i], &wsp[i], L_subfr);
-    Syn_Filt(Ap2, &wsp[i], &wsp[i], L_subfr, mem_w, (Word16)1);
+    Pond_Ai(A, cd->F_gamma1, Ap1);
+    Pond_Ai(A, cd->F_gamma2, Ap2);
+    Residu(Ap1, &cd->speech[i], &cd->wsp[i], L_subfr);
+    Syn_Filt(Ap2, &cd->wsp[i], &cd->wsp[i], L_subfr, cd->mem_w, (Word16)1);
     A += pp1;
   }
 
   /* Find open loop pitch delay */
 
-  T0 = Pitch_Ol_Dec(wsp, L_frame);
+  T0 = Pitch_Ol_Dec(cd->wsp, L_frame);
 
   /* range for closed loop pitch search */
 
@@ -382,32 +334,32 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
      * Find the weighted LPC coefficients for the weighting filter.  *
      *---------------------------------------------------------------*/
 
-    Pond_Ai(Aq, F_gamma3, Ap3);
-    Pond_Ai(Aq, F_gamma4, Ap4);
+    Pond_Ai(Aq, cd->F_gamma3, Ap3);
+    Pond_Ai(Aq, cd->F_gamma4, Ap4);
 
 
     /*---------------------------------------------------------------*
      * Compute impulse response, h1[], of weighted synthesis filter  *
      *---------------------------------------------------------------*/
 
-    ai_zero[0] = 4096;				/* 1 in Q12 */
-    for (i = 1; i <= p; i++) ai_zero[i] = 0;
+    cd->ai_zero[0] = 4096;				/* 1 in Q12 */
+    for (i = 1; i <= p; i++) cd->ai_zero[i] = 0;
 
-    Syn_Filt(Ap4, ai_zero, h1, L_subfr, zero, (Word16)0);
+    Syn_Filt(Ap4, cd->ai_zero, h1, L_subfr, cd->zero, (Word16)0);
 
     /*---------------------------------------------------------------*
      * Compute LPC residual and copy it to exc[i_subfr]              *
      *---------------------------------------------------------------*/
 
-    Residu(Aq, &speech[i_subfr], res, L_subfr);
+    Residu(Aq, &cd->speech[i_subfr], res, L_subfr);
 
-    for(i=0; i<L_subfr; i++) exc[i_subfr+i] = res[i];
+    for(i=0; i<L_subfr; i++) cd->exc[i_subfr+i] = res[i];
 
     /*---------------------------------------------------------------*
      * Find the target vector for pitch search:  ->xn[]              *
      *---------------------------------------------------------------*/
 
-    Syn_Filt(Ap4, res, xn, L_subfr, mem_w0, (Word16)0);
+    Syn_Filt(Ap4, res, xn, L_subfr, cd->mem_w0, (Word16)0);
 
     /*----------------------------------------------------------------------*
      *                 Closed-loop fractional pitch search                  *
@@ -430,7 +382,7 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
      *  code = (T0-(T0_min-1))*3 + frac - 1;  where T0[T0_min-1 .. T0_max+1]*
      *---------------------------------------------------------------------*/
 
-    T0 = Pitch_Fr(&exc[i_subfr], xn, h1, L_subfr, T0_min, T0_max,
+    T0 = Pitch_Fr(&cd->exc[i_subfr], xn, h1, L_subfr, T0_min, T0_max,
                   i_subfr, &T0_frac);
 
     if (i_subfr == 0)
@@ -481,9 +433,9 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
     *-----------------------------------------------------------------*/
 
 
-    Pred_Lt(&exc[i_subfr], T0, T0_frac, L_subfr);
+    Pred_Lt(&cd->exc[i_subfr], T0, T0_frac, L_subfr);
 
-    Syn_Filt(Ap4, &exc[i_subfr], y1, L_subfr, zero, (Word16)0);
+    Syn_Filt(Ap4, &cd->exc[i_subfr], y1, L_subfr, cd->zero, (Word16)0);
 
     gain_pit = G_Pitch(xn, y1, L_subfr);
 
@@ -503,8 +455,8 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
     * -Find correlations of h2[];  rr[i][j] = sum h2[n-i]*h2[n-j]    *
     *----------------------------------------------------------------*/
 
-    for (i = 0; i <= p; i++) ai_zero[i] = Ap3[i];
-    Syn_Filt(Ap4, ai_zero, F, L_subfr, zero, (Word16)0);
+    for (i = 0; i <= p; i++) cd->ai_zero[i] = Ap3[i];
+    Syn_Filt(Ap4, cd->ai_zero, F, L_subfr, cd->zero, (Word16)0);
 
     /* Introduce pitch contribution with fixe gain of 0.8 to F[] */
 
@@ -516,9 +468,9 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
 
     /* Compute h2[]; -> F[] filtered by 1/Ap4(z) */
 
-    Syn_Filt(Ap4, F, h2, L_subfr, zero, (Word16)0);
+    Syn_Filt(Ap4, F, h2, L_subfr, cd->zero, (Word16)0);
 
-    Cal_Rr2(h2, (Word16*)rr);
+    Cal_Rr2(h2, (Word16*)cd->rr);
 
    /*-----------------------------------------------------------------*
     * - Backward filtering of target vector (find dn[] from xn2[])    *
@@ -527,7 +479,7 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
 
     Back_Fil(xn2, h2, dn, L_subfr);	/* backward filtered target vector dn */
 
-    *ana++ =D4i60_16(dn,F,h2, rr, code, y2, &sign_code, &shift_code);
+    *ana++ =D4i60_16(dn,F,h2, cd->rr, code, y2, &sign_code, &shift_code);
     *ana++ = sign_code;
     *ana++ = shift_code;
     gain_code = G_Code(xn2, y2, L_subfr);
@@ -536,7 +488,7 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
     * - Quantization of gains.                                        *
     *-----------------------------------------------------------------*/
 
-    *ana++ = Ener_Qua(Aq,&exc[i_subfr],code, L_subfr, &gain_pit, &gain_code);
+    *ana++ = Ener_Qua(cd, Aq,&cd->exc[i_subfr],code, L_subfr, &gain_pit, &gain_code);
 
    /*-------------------------------------------------------*
     * - Find the total excitation                           *
@@ -551,15 +503,15 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
       /* exc[i] = gain_pit*exc[i] + gain_code*code[i]; */
       /* exc[i]  in Q0   gain_pit in Q12               */
       /* code[i] in Q12  gain_cod in Q0                */
-      L_temp = L_mult0(exc[i+i_subfr], gain_pit);
+      L_temp = L_mult0(cd->exc[i+i_subfr], gain_pit);
       L_temp = L_mac0(L_temp, code[i], gain_code);
-      exc[i+i_subfr] = L_shr_r(L_temp, (Word16)12);
+      cd->exc[i+i_subfr] = L_shr_r(L_temp, (Word16)12);
     }
 
     for(i=0; i<L_subfr; i++)
-      res[i] = sub(res[i], exc[i_subfr+i]);
+      res[i] = sub(res[i], cd->exc[i_subfr+i]);
 
-    Syn_Filt(Ap4, res, code, L_subfr, mem_w0, (Word16)1);
+    Syn_Filt(Ap4, res, code, L_subfr, cd->mem_w0, (Word16)1);
 
    /* Note: we use vector code[] as output only as temporary vector */
 
@@ -568,7 +520,7 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
     *   This filter is to help debug only.                  *
     *-------------------------------------------------------*/
 
-    Syn_Filt(Aq, &exc[i_subfr], &synth[i_subfr], L_subfr, mem_syn,
+    Syn_Filt(Aq, &cd->exc[i_subfr], &synth[i_subfr], L_subfr, cd->mem_syn,
 			(Word16)1);
 
     Aq += pp1;
@@ -581,13 +533,13 @@ void Coder_Tetra(Word16 ana[], Word16 synth[])
   *--------------------------------------------------*/
 
   for(i=0; i< L_total-L_frame; i++)
-    old_speech[i] = old_speech[i+L_frame];
+    cd->old_speech[i] = cd->old_speech[i+L_frame];
 
   for(i=0; i<pit_max; i++)
-    old_wsp[i] = old_wsp[i+L_frame];
+    cd->old_wsp[i] = cd->old_wsp[i+L_frame];
 
   for(i=0; i<pit_max+L_inter; i++)
-    old_exc[i] = old_exc[i+L_frame];
+    cd->old_exc[i] = cd->old_exc[i+L_frame];
 
   return;
 }

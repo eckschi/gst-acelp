@@ -14,7 +14,6 @@ tab_files = files(
 
 # sources used to compile this plug-in
 plugin_sources = [
-  'gstacelpencplugin.c',
   'gstacelpenc.c',
   'gstacelpenc.h',
   'source.h',
@@ -57,7 +56,7 @@ pkg_mod = import('pkgconfig')
 pkg_mod.generate(
   name : 'gst-acelpenc',
   filebase : 'gst-acelpenc',
-  description : 'Meson sample project.',
+  description : 'GStreamer TETRA ACELP Plugin',
   subdirs : 'src',
   libraries : shlib,
   version : '"@0@"'.format(meson.project_version()),

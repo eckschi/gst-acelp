@@ -38,6 +38,13 @@
 #include <gst/audio/gstaudioencoder.h>
 #include "gstacelpenc.h"
 
+#include "source.h"
+#include "structs.h"
+
+#define L_frame     240
+#define serial_size 138
+#define ana_size     23
+
 GST_DEBUG_CATEGORY_STATIC (gst_acelpenc_debug_category);
 #define GST_CAT_DEFAULT gst_acelpenc_debug_category
 
@@ -81,25 +88,32 @@ enum
 
 /* pad templates */
 
+// the output format
 static GstStaticPadTemplate gst_acelpenc_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/unknown")
+    GST_STATIC_CAPS("audio/x-tetra-acelp, "
+        "rate = 8000, " 
+        "channels = 1")
+
     );
 
-/* FIXME add/remove the formats that you want to support */
+
+/* the input formats that we support */
 static GstStaticPadTemplate gst_acelpenc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw,format=S16LE,rate=[1,max],"
-        "channels=[1,max],layout=interleaved")
+    GST_STATIC_CAPS("audio/x-raw, "
+                    "format = (string) " GST_AUDIO_NE (S16) ", "
+                    "layout = (string) interleaved, "
+                    "rate = (int) 8000, channels = (int) 1")
+
     );
 
 
 /* class initialization */
-
 G_DEFINE_TYPE_WITH_CODE (GstAcelpenc, gst_acelpenc, GST_TYPE_AUDIO_ENCODER,
     GST_DEBUG_CATEGORY_INIT (gst_acelpenc_debug_category, "acelpenc", 0,
         "debug category for acelpenc element"));
@@ -108,46 +122,46 @@ static void
 gst_acelpenc_class_init (GstAcelpencClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstAudioEncoderClass *audio_encoder_class = GST_AUDIO_ENCODER_CLASS (klass);
 
   /* Setting up pads and setting metadata should be moved to
      base_class_init if you intend to subclass this class. */
-  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
-      &gst_acelpenc_src_template);
-  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
-      &gst_acelpenc_sink_template);
+  gst_element_class_add_static_pad_template (element_class, &gst_acelpenc_src_template);
+  gst_element_class_add_static_pad_template (element_class, &gst_acelpenc_sink_template);
 
-  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
-      "FIXME Long name", "Generic", "FIXME Description",
-      "FIXME <fixme@example.com>");
+  gst_element_class_set_static_metadata (element_class,
+      "TETRA ACELP encoder", "Codec/Encoder/Audio", "Encode TETRA ACELP audio",
+      "Manfred Eckschlager<me@eckschi.net>");
 
   gobject_class->set_property = gst_acelpenc_set_property;
   gobject_class->get_property = gst_acelpenc_get_property;
-  gobject_class->dispose = gst_acelpenc_dispose;
-  gobject_class->finalize = gst_acelpenc_finalize;
+  //gobject_class->dispose = gst_acelpenc_dispose;
+  //gobject_class->finalize = gst_acelpenc_finalize;
   audio_encoder_class->start = GST_DEBUG_FUNCPTR (gst_acelpenc_start);
   audio_encoder_class->stop = GST_DEBUG_FUNCPTR (gst_acelpenc_stop);
   audio_encoder_class->set_format = GST_DEBUG_FUNCPTR (gst_acelpenc_set_format);
-  audio_encoder_class->handle_frame =
-      GST_DEBUG_FUNCPTR (gst_acelpenc_handle_frame);
-  audio_encoder_class->flush = GST_DEBUG_FUNCPTR (gst_acelpenc_flush);
-  audio_encoder_class->pre_push = GST_DEBUG_FUNCPTR (gst_acelpenc_pre_push);
-  audio_encoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_acelpenc_sink_event);
-  audio_encoder_class->src_event = GST_DEBUG_FUNCPTR (gst_acelpenc_src_event);
-  audio_encoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_acelpenc_getcaps);
-  audio_encoder_class->open = GST_DEBUG_FUNCPTR (gst_acelpenc_open);
-  audio_encoder_class->close = GST_DEBUG_FUNCPTR (gst_acelpenc_close);
-  audio_encoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_acelpenc_negotiate);
-  audio_encoder_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_acelpenc_decide_allocation);
-  audio_encoder_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_acelpenc_propose_allocation);
+  audio_encoder_class->handle_frame = GST_DEBUG_FUNCPTR (gst_acelpenc_handle_frame);
+  //audio_encoder_class->flush = GST_DEBUG_FUNCPTR (gst_acelpenc_flush);
+  //audio_encoder_class->pre_push = GST_DEBUG_FUNCPTR (gst_acelpenc_pre_push);
+  //audio_encoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_acelpenc_sink_event);
+  //audio_encoder_class->src_event = GST_DEBUG_FUNCPTR (gst_acelpenc_src_event);
+  //audio_encoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_acelpenc_getcaps);
+  //audio_encoder_class->open = GST_DEBUG_FUNCPTR (gst_acelpenc_open);
+  //audio_encoder_class->close = GST_DEBUG_FUNCPTR (gst_acelpenc_close);
+  //audio_encoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_acelpenc_negotiate);
+  //audio_encoder_class->decide_allocation = GST_DEBUG_FUNCPTR (gst_acelpenc_decide_allocation);
+  //audio_encoder_class->propose_allocation = GST_DEBUG_FUNCPTR (gst_acelpenc_propose_allocation);
 
 }
 
 static void
 gst_acelpenc_init (GstAcelpenc *acelpenc)
 {
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_ENCODER_SINK_PAD (acelpenc));
+
+  /* Set defaults. */
+  acelpenc->samples_per_block = L_frame;
 }
 
 void
@@ -211,6 +225,9 @@ gst_acelpenc_start (GstAudioEncoder *encoder)
 
   GST_DEBUG_OBJECT (acelpenc, "start");
 
+  Init_Pre_Process(&acelpenc->coderData);
+  Init_Coder_Tetra(&acelpenc->coderData);
+
   return TRUE;
 }
 
@@ -227,21 +244,105 @@ gst_acelpenc_stop (GstAudioEncoder *encoder)
 static gboolean
 gst_acelpenc_set_format (GstAudioEncoder *encoder, GstAudioInfo *info)
 {
+  GstCaps *caps;
+  gboolean ret;
   GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
 
   GST_DEBUG_OBJECT (acelpenc, "set_format");
 
-  return TRUE;
+  // acelpenc->rate = GST_AUDIO_INFO_RATE (info);
+  // acelpenc->channels = GST_AUDIO_INFO_CHANNELS (info);
+
+  caps = gst_caps_new_simple ("audio/x-tetra-acelp",
+      "rate", G_TYPE_INT, 8000,
+      "channels", G_TYPE_INT, 1,
+      "layout", G_TYPE_STRING, "interleaved",
+      NULL);
+
+  ret = gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (encoder), caps);
+  gst_caps_unref (caps);
+  
+  acelpenc->samples_per_block = L_frame;
+
+  /* report needs to base class */
+  gst_audio_encoder_set_frame_samples_min (encoder, acelpenc->samples_per_block);
+  gst_audio_encoder_set_frame_samples_max (encoder, acelpenc->samples_per_block);
+  gst_audio_encoder_set_frame_max (encoder, 1);
+  
+  return ret;
+}
+
+static GstBuffer *
+acelpenc_encode_block (GstAcelpenc * enc, const gint16 * samples, int blocksize)
+{
+  GstBuffer *outbuf = NULL;
+  GstMapInfo omap;
+  Word16 syn[L_frame];			// Local synthesis.
+  Word16 ana[ana_size];			/* Analysis parameters.   */
+
+  outbuf = gst_buffer_new_and_alloc (blocksize);
+  gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
+
+  memcpy(enc->coderData.new_speech, samples, L_frame);        // copy input audio into codec
+
+  Pre_Process(&enc->coderData, enc->coderData.new_speech, (Word16)L_frame);	    // Pre processing of input speech 
+
+  Coder_Tetra(&enc->coderData, ana, syn);       // Find speech parameters         
+
+  Post_Process(syn, (Word16)L_frame);           // Post processing of synthesis   
+
+  Prm2bits_Tetra(ana, omap.data);                  // Parameters to serial bits      
+
+  gst_buffer_unmap (outbuf, &omap);
+
+  return outbuf;
 }
 
 static GstFlowReturn
-gst_acelpenc_handle_frame (GstAudioEncoder *encoder, GstBuffer *buffer)
+gst_acelpenc_handle_frame(GstAudioEncoder *encoder, GstBuffer *buffer)
 {
   GstAcelpenc *acelpenc = GST_ACELPENC (encoder);
+  GstFlowReturn ret = GST_FLOW_OK;
+  gint16 *samples;
+  GstBuffer *outbuf;
+  int input_bytes_per_block;
+  const int BYTES_PER_SAMPLE = 2;
+  GstMapInfo map;
 
   GST_DEBUG_OBJECT (acelpenc, "handle_frame");
 
-  return GST_FLOW_OK;
+  /* we don't deal with squeezing remnants, so simply discard those */
+  if (G_UNLIKELY (buffer == NULL)) 
+  {
+    GST_DEBUG_OBJECT (encoder, "no data");
+    goto done;
+  }
+
+  input_bytes_per_block =
+       acelpenc->samples_per_block * BYTES_PER_SAMPLE; // should be 480
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  if (G_UNLIKELY (map.size < input_bytes_per_block)) 
+  {
+    GST_DEBUG_OBJECT (acelpenc, "discarding trailing data %d", (gint) map.size);
+    gst_buffer_unmap (buffer, &map);
+    ret = gst_audio_encoder_finish_frame (encoder, NULL, -1);
+    goto done;
+  }
+
+  samples = (gint16 *) map.data;
+  GST_DEBUG_OBJECT (acelpenc, "zipfi");
+  // do tha shizzle
+  outbuf = acelpenc_encode_block (acelpenc, samples, 137);//acelpenc->blocksize);
+    
+  gst_buffer_unmap (buffer, &map);
+
+  GST_DEBUG_OBJECT (acelpenc, "foo");
+  ret = gst_audio_encoder_finish_frame (encoder, outbuf, acelpenc->samples_per_block);
+  GST_DEBUG_OBJECT (acelpenc, "foodle %d", ret);
+
+done:
+  return ret;
 }
 
 static void
@@ -343,3 +444,13 @@ gst_acelpenc_propose_allocation (GstAudioEncoder *encoder, GstQuery *query)
   return TRUE;
 }
 
+static gboolean
+plugin_init (GstPlugin *plugin)
+{
+  gst_element_register (plugin, "acelpenc", GST_RANK_PRIMARY, GST_TYPE_ACELPENC);
+
+  return TRUE;
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, acelpenc, "TETRA ACELP Encoder plugin", plugin_init, VERSION, "LGPL",
+    "GStreamer THOMSON-CSF", "https://github.com/eckschi/gst-acelp")

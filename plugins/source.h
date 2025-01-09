@@ -16,6 +16,7 @@
 *      DEFINITIONS
 *
 ************************************************************************/
+#include <structs.h>
 
 #ifndef TYPEDEF_H
 #define TYPEDEF_H
@@ -88,17 +89,17 @@ void   Syn_Filt(Word16 a[], Word16 x[], Word16 y[], Word16 lg, Word16 mem[],
 
 /* Specific coder functions */
 
-void   Init_Coder_Tetra(void);
-void   Coder_Tetra(Word16 ana[], Word16 synth[]);
+void   Init_Coder_Tetra(CoderData *cd);
+void   Coder_Tetra(CoderData *cd, Word16 ana[], Word16 synth[]);
 void   Cal_Rr2(Word16 h[], Word16 *rr);
 void   Clsp_334(Word16 *lsp, Word16 *lsp_q, Word16 *indice);
 Word16 D4i60_16(Word16 dn[], Word16 f[], Word16 h[], Word16 rr[][32],
                 Word16 cod[], Word16 y[], Word16 *sign, Word16 *shift_code);
-Word16 Ener_Qua(Word16 A[], Word16 prd_lt[], Word16 code[], Word16 L_subfr,
+Word16 Ener_Qua(CoderData *cd, Word16 A[], Word16 prd_lt[], Word16 code[], Word16 L_subfr,
                 Word16 *gain_pit, Word16 *gain_cod);
 Word16 G_Code(Word16 xn2[], Word16 y2[], Word16 L_subfr);
 Word16 G_Pitch(Word16 xn[], Word16 y1[], Word16 L_subfr);
-void   Init_Pre_Process(void);
+void   Init_Pre_Process(CoderData *cd);
 Word16 Lag_Max(Word16 signal[], Word16 sig_dec[], Word16 L_frame,
                Word16 lag_max, Word16 lag_min, Word16 *cor_max);
 Word16 Pitch_Fr(Word16 exc[], Word16 xn[], Word16 h[], Word16 L_subfr,
@@ -106,15 +107,15 @@ Word16 Pitch_Fr(Word16 exc[], Word16 xn[], Word16 h[], Word16 L_subfr,
 		    Word16 *pit_frac);
 Word16 Pitch_Ol_Dec(Word16 signal[], Word16 L_frame);
 void   Pred_Lt(Word16 exc[], Word16 T0, Word16 frac, Word16 L_subfr);
-void   Pre_Process(Word16 signal[], Word16 lg);
-void   Prm2bits_Tetra(Word16 prm[], Word16 bits[]);
+void   Pre_Process(CoderData *cd, Word16 signal[], Word16 lg);
+void   Prm2bits_Tetra(Word16 prm[], uint8_t bits[]);
 
 /* Specific decoder functions */
 
 void   Init_Decod_Tetra(void);
 void   Decod_Tetra(Word16 parm[], Word16 synth[]);
 void   Bits2prm_Tetra(Word16 bits[], Word16 prm[]);
-Word16 Dec_Ener(Word16 index, Word16 bfi, Word16 A[], Word16 prd_lt[],
+Word16 Dec_Ener(CoderData *cd, Word16 index, Word16 bfi, Word16 A[], Word16 prd_lt[],
 	    Word16 code[], Word16 L_subfr, Word16 *gain_pit, Word16 *gain_cod);
 void   D_D4i60(Word16 index,Word16 sign,Word16 shift, Word16 F[], 
 	    Word16 cod[]);
